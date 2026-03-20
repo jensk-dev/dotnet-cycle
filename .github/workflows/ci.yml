@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Cycle.slnx --locked-mode
+
+      - name: Build
+        run: dotnet build Cycle.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet test Cycle.slnx --no-build -c Release
+
+      - name: Pack
+        run: dotnet pack Cycle.slnx --no-build -c Release
+
+      - name: Upload packages
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: out/packages/Release/

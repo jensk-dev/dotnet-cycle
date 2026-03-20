@@ -34,6 +34,9 @@ dotnet_diagnostic.CS8604.severity = error
 # Unnecessary using directives
 dotnet_diagnostic.IDE0005.severity = warning
 
+# Missing XML comments — GenerateDocumentationFile is only for IDE0005 enforcement
+dotnet_diagnostic.CS1591.severity = none
+
 [*.{xml,csproj,props,targets,slnx}]
 indent_size = 2
 
