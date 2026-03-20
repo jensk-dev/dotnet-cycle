@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>cycle</ToolCommandName>
+        <PackageId>cycle</PackageId>
+        <Description>Determines affected .NET projects from a list of changed files</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="System.CommandLine" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Cycle.Core\Cycle.Core.csproj" />
+      <ProjectReference Include="..\Cycle.Infrastructure.MsBuild\Cycle.Infrastructure.MsBuild.csproj" />
+    </ItemGroup>
+    
+
+</Project>
