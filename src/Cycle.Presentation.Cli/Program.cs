@@ -7,7 +7,7 @@ public static class Program
     public static async Task Main(string[] args)
     {
         MsBuildBootstrap.Initialize();
-        
+
         var solutionPath = args[0];
         var reader = new MsBuildSolutionReader();
 

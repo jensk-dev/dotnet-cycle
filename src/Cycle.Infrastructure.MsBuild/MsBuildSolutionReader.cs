@@ -19,7 +19,8 @@ public class MsBuildSolutionReader : ISolutionReader
         using var projectCollection = new ProjectCollection();
         var results = new ConcurrentBag<ProjectInfo>();
 
-        Parallel.ForEach(solution.SolutionProjects, solutionProject => {
+        Parallel.ForEach(solution.SolutionProjects, solutionProject =>
+        {
             var fullPath = Path.IsPathRooted(solutionProject.FilePath)
                 ? Path.GetFullPath(solutionProject.FilePath)
                 : Path.GetFullPath(Path.Combine(solutionDir, solutionProject.FilePath));
@@ -27,10 +28,17 @@ public class MsBuildSolutionReader : ISolutionReader
             var project = Project.FromFile(fullPath, new ProjectOptions
             {
                 // ReSharper disable once AccessToDisposedClosure
-                ProjectCollection = projectCollection
+                ProjectCollection = projectCollection,
             });
 
-            results.Add(new ProjectInfo(project.GetPropertyValue("MSBuildProjectName"), fullPath));
+            var name = project.GetPropertyValue("MSBuildProjectName");
+            var filePath = FilePath.FromString(fullPath);
+            var extension = Path.GetExtension(fullPath);
+
+            if (!ProjectTypeExtensions.TryFromExtension(extension, out var projectType))
+                return;
+
+            results.Add(new ProjectInfo(name, filePath, projectType));
         });
 
         return results.ToList();
