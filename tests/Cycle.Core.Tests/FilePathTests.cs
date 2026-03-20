@@ -58,6 +58,7 @@ public class FilePathTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void Equals_IsCaseInsensitive()
     {
         var lower = FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.txt"));
@@ -67,12 +68,33 @@ public class FilePathTests
     }
 
     [Test]
+    [Platform(Include = "Linux")]
+    public void Equals_IsCaseSensitive()
+    {
+        var lower = FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.txt"));
+        var upper = FilePath.FromString(Path.Combine(Path.GetTempPath(), "TEST.TXT"));
+
+        lower.ShouldNotBe(upper);
+    }
+
+    [Test]
+    [Platform(Include = "Win")]
     public void GetHashCode_IsCaseInsensitive()
     {
         var lower = FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.txt"));
         var upper = FilePath.FromString(Path.Combine(Path.GetTempPath(), "TEST.TXT"));
 
         lower.GetHashCode().ShouldBe(upper.GetHashCode());
+    }
+
+    [Test]
+    [Platform(Include = "Linux")]
+    public void GetHashCode_IsCaseSensitive()
+    {
+        var lower = FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.txt"));
+        var upper = FilePath.FromString(Path.Combine(Path.GetTempPath(), "TEST.TXT"));
+
+        lower.GetHashCode().ShouldNotBe(upper.GetHashCode());
     }
 
     [Test]
@@ -138,5 +160,47 @@ public class FilePathTests
 
         path.FileName.ShouldBe("myfile.cs");
         path.FullPath.ShouldStartWith(Path.GetFullPath(basePath).TrimEnd(Path.DirectorySeparatorChar));
+    }
+
+    [Test]
+    public void Default_IsDefault_ReturnsTrue()
+    {
+        var path = default(FilePath);
+
+        path.IsDefault.ShouldBeTrue();
+    }
+
+    [Test]
+    public void Default_FullPath_IsNull()
+    {
+        var path = default(FilePath);
+
+        path.FullPath.ShouldBeNull();
+    }
+
+    [Test]
+    public void Default_Equals_AnotherDefault()
+    {
+        var a = default(FilePath);
+        var b = default(FilePath);
+
+        a.ShouldBe(b);
+    }
+
+    [Test]
+    public void Default_GetHashCode_ReturnsZero()
+    {
+        var path = default(FilePath);
+
+        path.GetHashCode().ShouldBe(0);
+    }
+
+    [Test]
+    public void Default_DoesNotEqual_ValidPath()
+    {
+        var valid = FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.txt"));
+        var def = default(FilePath);
+
+        def.ShouldNotBe(valid);
     }
 }

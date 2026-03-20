@@ -214,7 +214,7 @@ public static partial class Program
         "json" => new JsonExporter(),
         "build" => new BuildExporter(),
         "paths" => new PathsExporter(),
-        _ => new JsonExporter(),
+        _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported output format"),
     };
 
     private static ILoggerFactory CreateLoggerFactory(string logLevel)

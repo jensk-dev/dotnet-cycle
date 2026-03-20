@@ -36,17 +36,18 @@ public static class ProjectTypeExtensions
 
     public static bool TryFromExtension(string extension, out ProjectType projectType)
     {
-        projectType = extension.ToLowerInvariant() switch
+        var result = extension.ToLowerInvariant() switch
         {
-            ".csproj" => ProjectType.CsProj,
-            ".fsproj" => ProjectType.FsProj,
-            ".vbproj" => ProjectType.VbProj,
-            ".sqlproj" => ProjectType.SqlProj,
-            ".dtproj" => ProjectType.DtProj,
-            ".proj" => ProjectType.Proj,
-            _ => (ProjectType)(-1),
+            ".csproj" => (ProjectType?)ProjectType.CsProj,
+            ".fsproj" => (ProjectType?)ProjectType.FsProj,
+            ".vbproj" => (ProjectType?)ProjectType.VbProj,
+            ".sqlproj" => (ProjectType?)ProjectType.SqlProj,
+            ".dtproj" => (ProjectType?)ProjectType.DtProj,
+            ".proj" => (ProjectType?)ProjectType.Proj,
+            _ => null,
         };
 
-        return (int)projectType >= 0;
+        projectType = result ?? default;
+        return result.HasValue;
     }
 }

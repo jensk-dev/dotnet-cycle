@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Cycle.Core;
 using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
@@ -10,6 +9,8 @@ public class MsBuildSolutionReader : ISolutionReader
 {
     public async Task<IReadOnlyList<ProjectInfo>> GetProjectsAsync(string solutionPath, CancellationToken ct)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(solutionPath);
+
         var serializer = SolutionSerializers.GetSerializerByMoniker(solutionPath)
             ?? throw new ArgumentException($"No serializer found for '{solutionPath}'");
 
@@ -17,9 +18,9 @@ public class MsBuildSolutionReader : ISolutionReader
         var solutionDir = Path.GetDirectoryName(Path.GetFullPath(solutionPath))!;
 
         using var projectCollection = new ProjectCollection();
-        var results = new ConcurrentBag<ProjectInfo>();
+        var results = new List<ProjectInfo>();
 
-        Parallel.ForEach(solution.SolutionProjects, solutionProject =>
+        foreach (var solutionProject in solution.SolutionProjects)
         {
             var fullPath = Path.IsPathRooted(solutionProject.FilePath)
                 ? Path.GetFullPath(solutionProject.FilePath)
@@ -27,7 +28,6 @@ public class MsBuildSolutionReader : ISolutionReader
 
             var project = Project.FromFile(fullPath, new ProjectOptions
             {
-                // ReSharper disable once AccessToDisposedClosure
                 ProjectCollection = projectCollection,
             });
 
@@ -36,11 +36,13 @@ public class MsBuildSolutionReader : ISolutionReader
             var extension = Path.GetExtension(fullPath);
 
             if (!ProjectTypeExtensions.TryFromExtension(extension, out var projectType))
-                return;
+            {
+                continue;
+            }
 
             results.Add(new ProjectInfo(name, filePath, projectType));
-        });
+        }
 
-        return results.ToList();
+        return results;
     }
 }

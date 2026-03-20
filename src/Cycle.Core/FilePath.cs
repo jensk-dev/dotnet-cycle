@@ -37,11 +37,24 @@ public readonly record struct FilePath
 
     public string Extension { get; }
 
-    public bool Equals(FilePath other) => string.Equals(FullPath, other.FullPath, StringComparison.OrdinalIgnoreCase);
+    public bool IsDefault => FullPath is null;
+
+    public static StringComparer PathComparer { get; } =
+        OperatingSystem.IsWindows()
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
+
+    public static StringComparison PathComparison { get; } =
+        OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+    public bool Equals(FilePath other) =>
+        FullPath is null ? other.FullPath is null : string.Equals(FullPath, other.FullPath, PathComparison);
 
     public override string ToString() => FullPath;
 
-    public override int GetHashCode() => StringComparer.OrdinalIgnoreCase.GetHashCode(FullPath);
+    public override int GetHashCode() => FullPath is null ? 0 : PathComparer.GetHashCode(FullPath);
 
     public static explicit operator string(FilePath path) => path.FullPath;
 

@@ -3,16 +3,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Cycle.Infrastructure.MsBuild;
 
-public sealed partial class PhantomFileManager : IDisposable
+public sealed partial class PhantomFileManager(ILogger logger) : IDisposable
 {
-    private readonly ILogger _logger;
-    private readonly HashSet<string> _createdFiles = [];
+    private readonly HashSet<string> _createdFiles = new(FilePath.PathComparer);
     private bool _disposed;
-
-    public PhantomFileManager(ILogger logger)
-    {
-        _logger = logger;
-    }
 
     public void CreatePhantomFiles(IReadOnlyList<FilePath> changedFiles, IReadOnlySet<FilePath> projectFiles)
     {
@@ -55,7 +49,7 @@ public sealed partial class PhantomFileManager : IDisposable
                 File.Delete(path);
                 LogDeletedPhantomFile(path);
             }
-            catch (IOException ex)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 LogFailedToDeletePhantomFile(path, ex);
             }

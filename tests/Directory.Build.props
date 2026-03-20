@@ -5,6 +5,9 @@
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
     <NoWarn>$(NoWarn);CA1707</NoWarn>
+    <EnableNUnitRunner>true</EnableNUnitRunner>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
 
   <ItemGroup>

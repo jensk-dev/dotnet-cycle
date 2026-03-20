@@ -8,7 +8,11 @@ using MsbProject = Microsoft.Build.Evaluation.Project;
 
 namespace Cycle.Infrastructure.MsBuild;
 
-public sealed partial class ProjectResolver : IProjectResolver
+public sealed partial class ProjectResolver(
+    ISolutionReader solutionReader,
+    ILogger<ProjectResolver> logger,
+    IReadOnlySet<string>? includedProperties = null)
+    : IProjectResolver
 {
     private static readonly string[] RelevantItemTypes =
     [
@@ -21,32 +25,21 @@ public sealed partial class ProjectResolver : IProjectResolver
         "Reference",
     ];
 
-    private readonly ISolutionReader _solutionReader;
-    private readonly ILogger<ProjectResolver> _logger;
-    private readonly IReadOnlySet<string> _includedProperties;
-
-    public ProjectResolver(
-        ISolutionReader solutionReader,
-        ILogger<ProjectResolver> logger,
-        IReadOnlySet<string>? includedProperties = null)
-    {
-        _solutionReader = solutionReader;
-        _logger = logger;
-        _includedProperties = includedProperties ?? ImmutableHashSet<string>.Empty;
-    }
+    private readonly IReadOnlySet<string> _includedProperties = includedProperties ?? ImmutableHashSet<string>.Empty;
 
     public async Task<IReadOnlyList<ProjectInfo>> ResolveAffectedProjectsAsync(
         string solutionPath,
         IReadOnlyList<FilePath> changedFiles,
         CancellationToken ct)
     {
-        var solutionProjects = await _solutionReader.GetProjectsAsync(solutionPath, ct);
+        var solutionProjects = await solutionReader.GetProjectsAsync(solutionPath, ct);
         var projectFilePaths = solutionProjects.Select(p => p.FilePath).ToHashSet();
 
-        using var phantomFiles = new PhantomFileManager(_logger);
+        using var phantomFiles = new PhantomFileManager(logger);
         phantomFiles.CreatePhantomFiles(changedFiles, projectFilePaths);
 
-        var loadedProjects = LoadProjects(solutionProjects);
+        using var projectCollection = new ProjectCollection();
+        var loadedProjects = LoadProjects(solutionProjects, projectCollection);
         var reverseMap = BuildReverseProjectMap(loadedProjects);
 
         var affected = new Dictionary<FilePath, ProjectInfo>();
@@ -63,8 +56,6 @@ public sealed partial class ProjectResolver : IProjectResolver
             ct.ThrowIfCancellationRequested();
             FindAffectedProjects(changedFile, loadedProjects, reverseMap, affected);
         }
-
-        ProjectCollection.GlobalProjectCollection.UnloadAllProjects();
 
         return affected.Values.ToList();
     }
@@ -180,7 +171,7 @@ public sealed partial class ProjectResolver : IProjectResolver
         return false;
     }
 
-    private List<LoadedProject> LoadProjects(IReadOnlyList<ProjectInfo> solutionProjects)
+    private List<LoadedProject> LoadProjects(IReadOnlyList<ProjectInfo> solutionProjects, ProjectCollection projectCollection)
     {
         var results = new List<LoadedProject>(solutionProjects.Count);
 
@@ -190,7 +181,7 @@ public sealed partial class ProjectResolver : IProjectResolver
             {
                 var msbProject = MsbProject.FromFile(projectInfo.FilePath.FullPath, new ProjectOptions
                 {
-                    ProjectCollection = ProjectCollection.GlobalProjectCollection,
+                    ProjectCollection = projectCollection,
                 });
 
                 var properties = ExtractProperties(msbProject);
@@ -269,7 +260,7 @@ public sealed partial class ProjectResolver : IProjectResolver
     }
 
     private static bool FilePathsEqual(string path1, string path2) =>
-        string.Equals(path1, path2, StringComparison.OrdinalIgnoreCase);
+        string.Equals(path1, path2, FilePath.PathComparison);
 
     private sealed record LoadedProject(ProjectInfo Info, MsbProject? MsbProject);
 
