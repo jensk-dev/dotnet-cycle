@@ -1,4 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+      <Description>MSBuild-based project resolution for the cycle affected-project resolver</Description>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Framework" ExcludeAssets="runtime" />

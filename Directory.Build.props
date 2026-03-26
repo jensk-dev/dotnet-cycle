@@ -9,11 +9,37 @@
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <AnalysisLevel>latest-recommended</AnalysisLevel>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <VersionPrefix>0.1.0</VersionPrefix>
+        <MinVerTagPrefix>v</MinVerTagPrefix>
 
         <BaseOutputPath>$(MSBuildThisFileDirectory)out\bin\$(MSBuildProjectName)\</BaseOutputPath>
         <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)out\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
         <PublishDir>$(MSBuildThisFileDirectory)out\publish\$(MSBuildProjectName)\$(Configuration)\</PublishDir>
         <PackageOutputPath>$(MSBuildThisFileDirectory)out\packages\$(Configuration)\</PackageOutputPath>
     </PropertyGroup>
+
+    <PropertyGroup Label="Package metadata">
+        <Authors>Jens K.</Authors>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>dotnet;cli;affected;projects;msbuild;ci</PackageTags>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Build reproducibility">
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+        <EnablePackageValidation>true</EnablePackageValidation>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="/" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+        <PackageReference Include="MinVer" PrivateAssets="All" />
+    </ItemGroup>
 </Project>

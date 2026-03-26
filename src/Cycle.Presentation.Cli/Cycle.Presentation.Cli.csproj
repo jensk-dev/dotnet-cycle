@@ -6,6 +6,8 @@
         <ToolCommandName>cycle</ToolCommandName>
         <PackageId>cycle</PackageId>
         <Description>Determines affected .NET projects from a list of changed files</Description>
+        <IsTrimmable>true</IsTrimmable>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     </PropertyGroup>
 
     <ItemGroup>

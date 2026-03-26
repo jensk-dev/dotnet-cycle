@@ -1,1 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Description>Core domain types and interfaces for the cycle affected-project resolver</Description>
+    </PropertyGroup>
+</Project>

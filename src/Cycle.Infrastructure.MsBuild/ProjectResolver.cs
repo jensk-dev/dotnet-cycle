@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Cycle.Core;
 using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
@@ -44,7 +44,7 @@ public sealed partial class ProjectResolver(
 
         var affected = new Dictionary<FilePath, ProjectInfo>();
 
-        // Include projects that failed to load as affected (regression detection)
+        // Projects that fail to load are always added to the output to prevent regression from silently passing CI.
         foreach (var (info, _) in loadedProjects.Where(p => p.MsbProject is null))
         {
             affected.TryAdd(info.FilePath, info);
@@ -66,7 +66,6 @@ public sealed partial class ProjectResolver(
         Dictionary<FilePath, HashSet<FilePath>> reverseMap,
         Dictionary<FilePath, ProjectInfo> affected)
     {
-        // Step 1: Find directly affected projects
         var directlyAffected = new HashSet<FilePath>();
 
         foreach (var (info, msbProject) in loadedProjects)
@@ -81,7 +80,6 @@ public sealed partial class ProjectResolver(
             affected.TryAdd(info.FilePath, info);
         }
 
-        // Step 2: BFS through reverse dependency graph for transitive closure
         var queue = new Queue<FilePath>(directlyAffected);
         var projectLookup = loadedProjects.ToDictionary(p => p.Info.FilePath, p => p.Info);
 

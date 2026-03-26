@@ -15,6 +15,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -27,7 +29,7 @@ jobs:
         run: dotnet build Cycle.slnx --no-restore -c Release
 
       - name: Test
-        run: dotnet test Cycle.slnx --no-build -c Release
+        run: dotnet test --solution Cycle.slnx --no-build -c Release --collect:"XPlat Code Coverage"
 
       - name: Pack
         run: dotnet pack Cycle.slnx --no-build -c Release
