@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using Cycle.Core;
+﻿using Cycle.Core;
 using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
 using Microsoft.Extensions.Logging;
@@ -10,8 +9,7 @@ namespace Cycle.Infrastructure.MsBuild;
 
 public sealed partial class ProjectResolver(
     ISolutionReader solutionReader,
-    ILogger<ProjectResolver> logger,
-    IReadOnlySet<string>? includedProperties = null)
+    ILogger<ProjectResolver> logger)
     : IProjectResolver
 {
     private static readonly string[] RelevantItemTypes =
@@ -24,8 +22,6 @@ public sealed partial class ProjectResolver(
         "PackageReference",
         "Reference",
     ];
-
-    private readonly IReadOnlySet<string> _includedProperties = includedProperties ?? ImmutableHashSet<string>.Empty;
 
     public async Task<IReadOnlyList<ProjectInfo>> ResolveAffectedProjectsAsync(
         string solutionPath,
@@ -182,9 +178,7 @@ public sealed partial class ProjectResolver(
                     ProjectCollection = projectCollection,
                 });
 
-                var properties = ExtractProperties(msbProject);
-                var enrichedInfo = projectInfo with { Properties = properties };
-                results.Add(new LoadedProject(enrichedInfo, msbProject));
+                results.Add(new LoadedProject(projectInfo, msbProject));
 
                 LogProjectLoaded(projectInfo.FilePath.FullPath);
             }
@@ -196,23 +190,6 @@ public sealed partial class ProjectResolver(
         }
 
         return results;
-    }
-
-    private ImmutableDictionary<string, string>? ExtractProperties(MsbProject msbProject)
-    {
-        if (_includedProperties.Count == 0)
-            return null;
-
-        var builder = ImmutableDictionary.CreateBuilder<string, string>();
-
-        foreach (var propertyName in _includedProperties)
-        {
-            var property = msbProject.GetProperty(propertyName);
-            if (property is not null)
-                builder.Add(property.Name, property.EvaluatedValue);
-        }
-
-        return builder.Count > 0 ? builder.ToImmutable() : null;
     }
 
     private Dictionary<FilePath, HashSet<FilePath>> BuildReverseProjectMap(List<LoadedProject> loadedProjects)

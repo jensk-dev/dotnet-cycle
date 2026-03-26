@@ -1,4 +1,4 @@
-namespace Cycle.Infrastructure.MsBuild.Tests;
+﻿namespace Cycle.Infrastructure.MsBuild.Tests;
 
 [TestFixture]
 public class MsBuildBootstrapTests

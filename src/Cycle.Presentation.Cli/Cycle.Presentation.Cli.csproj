@@ -5,7 +5,7 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>cycle</ToolCommandName>
         <PackageId>cycle</PackageId>
-        <Description>Determines affected .NET projects from a list of changed files</Description>
+        <Description>Generates a solution filter (.slnf) from affected .NET projects</Description>
         <IsTrimmable>true</IsTrimmable>
         <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     </PropertyGroup>

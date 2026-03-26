@@ -1,4 +1,4 @@
-using FsCheck;
+﻿using FsCheck;
 using FsCheck.Fluent;
 
 namespace Cycle.Core.Tests;

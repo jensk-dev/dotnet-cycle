@@ -1,4 +1,4 @@
-using Cycle.Core;
+﻿using Cycle.Core;
 using Microsoft.Extensions.Logging;
 
 namespace Cycle.Infrastructure.MsBuild;

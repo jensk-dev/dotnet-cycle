@@ -1,6 +1,6 @@
 # cycle
 
-A .NET CLI tool that determines which projects in a solution are affected by a set of changed files. It evaluates MSBuild project graphs — including transitive dependencies, imports, and item references — so you can scope builds and tests to only what changed.
+A .NET CLI tool that generates a Solution Filter (`.slnf`) from a list of changed files. It evaluates MSBuild project graphs — including transitive dependencies, imports, and item references — so you can scope builds and tests in CI to only what changed.
 
 ## Installation
 
@@ -11,7 +11,7 @@ dotnet tool install --global cycle
 ## Usage
 
 ```bash
-cycle <solution-path> [options]
+cycle <solution-path> <output-file> [options]
 ```
 
 ### Arguments
@@ -19,50 +19,30 @@ cycle <solution-path> [options]
 | Argument | Description |
 |---|---|
 | `solution-path` | Path to the solution file (`.sln` or `.slnx`) |
+| `output-file` | Path to write the solution filter (`.slnf`) |
 
 ### Options
 
 | Option | Description | Default |
 |---|---|---|
 | `--changed-files <path>` | File containing changed file paths (one per line) | |
-| `--stdin` | Read changed file paths from stdin | |
-| `--output <format>` | Output format: `json`, `build`, or `paths` | `json` |
-| `--output-file <path>` | Write output to a file instead of stdout | |
-| `--include <types>` | Filter by project type (`csproj`, `fsproj`, `vbproj`, `sqlproj`, `dtproj`, `proj`) | |
-| `--include-property <names>` | MSBuild properties to include in output | |
 | `--log-level <level>` | Log verbosity: `quiet`, `minimal`, `normal`, `verbose` | `minimal` |
 
-### Output Formats
-
-- **json** — JSON array of affected projects with name, path, type, and optional properties
-- **build** — MSBuild Traversal SDK project file (`Microsoft.Build.Traversal`) with `ProjectReference` items
-- **paths** — Plain text, one absolute project path per line
+Changed files are read from `--changed-files` if provided, otherwise from stdin when input is piped.
 
 ## Examples
 
-Pipe changed files from git:
+Pipe changed files from git and write a solution filter:
 
 ```bash
-git diff --name-only origin/main | cycle MySolution.slnx --stdin
+git diff --name-only origin/main | cycle MySolution.slnx affected.slnf
+dotnet build affected.slnf
 ```
 
 Use a file list:
 
 ```bash
-cycle MySolution.slnx --changed-files changes.txt --output paths
-```
-
-Generate a traversal project for selective builds:
-
-```bash
-git diff --name-only origin/main | cycle MySolution.slnx --stdin --output build --output-file affected.proj
-dotnet build affected.proj
-```
-
-Filter to only C# projects and include a custom property:
-
-```bash
-git diff --name-only origin/main | cycle MySolution.slnx --stdin --include csproj --include-property IsTestProject
+cycle MySolution.slnx affected.slnf --changed-files changes.txt
 ```
 
 ## Building from Source

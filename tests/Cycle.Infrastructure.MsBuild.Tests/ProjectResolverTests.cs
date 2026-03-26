@@ -1,4 +1,4 @@
-using Cycle.Infrastructure.MsBuild.Tests.Helpers;
+﻿using Cycle.Infrastructure.MsBuild.Tests.Helpers;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Cycle.Infrastructure.MsBuild.Tests;

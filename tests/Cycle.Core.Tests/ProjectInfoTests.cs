@@ -1,4 +1,4 @@
-namespace Cycle.Core.Tests;
+﻿namespace Cycle.Core.Tests;
 
 [TestFixture]
 public class ProjectInfoTests
@@ -8,8 +8,7 @@ public class ProjectInfoTests
     {
         Should.Throw<ArgumentException>(() => new ProjectInfo(
             null!,
-            FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.csproj")),
-            ProjectType.CsProj));
+            FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.csproj"))));
     }
 
     [Test]
@@ -17,8 +16,7 @@ public class ProjectInfoTests
     {
         Should.Throw<ArgumentException>(() => new ProjectInfo(
             "",
-            FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.csproj")),
-            ProjectType.CsProj));
+            FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.csproj"))));
     }
 
     [Test]
@@ -26,8 +24,7 @@ public class ProjectInfoTests
     {
         Should.Throw<ArgumentException>(() => new ProjectInfo(
             "   ",
-            FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.csproj")),
-            ProjectType.CsProj));
+            FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.csproj"))));
     }
 
     [Test]
@@ -35,17 +32,7 @@ public class ProjectInfoTests
     {
         Should.Throw<ArgumentException>(() => new ProjectInfo(
             "Test",
-            default,
-            ProjectType.CsProj));
-    }
-
-    [Test]
-    public void Constructor_WithInvalidProjectType_ThrowsArgumentOutOfRangeException()
-    {
-        Should.Throw<ArgumentOutOfRangeException>(() => new ProjectInfo(
-            "Test",
-            FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.csproj")),
-            (ProjectType)999));
+            default));
     }
 
     [Test]
@@ -53,10 +40,9 @@ public class ProjectInfoTests
     {
         var info = new ProjectInfo(
             "Test",
-            FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.csproj")),
-            ProjectType.CsProj);
+            FilePath.FromString(Path.Combine(Path.GetTempPath(), "test.csproj")));
 
         info.Name.ShouldBe("Test");
-        info.Type.ShouldBe(ProjectType.CsProj);
+        info.FilePath.FileName.ShouldBe("test.csproj");
     }
 }

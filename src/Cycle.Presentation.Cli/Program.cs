@@ -1,6 +1,5 @@
-using System.CommandLine;
+﻿using System.CommandLine;
 using Cycle.Core;
-using Cycle.Core.Export;
 using Cycle.Infrastructure.MsBuild;
 using Microsoft.Extensions.Logging;
 
@@ -20,33 +19,9 @@ public static partial class Program
             Description = "Path to a file containing changed file paths (one per line)",
         };
 
-        var stdinOption = new Option<bool>("--stdin")
+        var outputFileArg = new Argument<FileInfo>("output-file")
         {
-            Description = "Read changed file paths from stdin (one per line)",
-        };
-
-        var outputOption = new Option<string>("--output")
-        {
-            Description = "Output format: json, build, or paths",
-            DefaultValueFactory = _ => "json",
-        };
-        outputOption.AcceptOnlyFromAmong("json", "build", "paths");
-
-        var outputFileOption = new Option<FileInfo?>("--output-file")
-        {
-            Description = "Write output to a file instead of stdout",
-        };
-
-        var includeOption = new Option<string[]>("--include")
-        {
-            Description = "Project types to include (csproj, fsproj, vbproj, sqlproj, dtproj, proj)",
-            AllowMultipleArgumentsPerToken = true,
-        };
-
-        var includePropertyOption = new Option<string[]>("--include-property")
-        {
-            Description = "MSBuild properties to include in output",
-            AllowMultipleArgumentsPerToken = true,
+            Description = "Path to write the solution filter (.slnf)",
         };
 
         var logLevelOption = new Option<string>("--log-level")
@@ -56,15 +31,11 @@ public static partial class Program
         };
         logLevelOption.AcceptOnlyFromAmong("quiet", "minimal", "normal", "verbose");
 
-        var rootCommand = new RootCommand("Determines affected .NET projects from a list of changed files")
+        var rootCommand = new RootCommand("Generates a solution filter (.slnf) from a list of changed files")
         {
             solutionArg,
+            outputFileArg,
             changedFilesOption,
-            stdinOption,
-            outputOption,
-            outputFileOption,
-            includeOption,
-            includePropertyOption,
             logLevelOption,
         };
 
@@ -72,21 +43,13 @@ public static partial class Program
         {
             var solutionFile = parseResult.GetValue(solutionArg)!;
             var changedFilesFile = parseResult.GetValue(changedFilesOption);
-            var useStdin = parseResult.GetValue(stdinOption);
-            var outputFormat = parseResult.GetValue(outputOption) ?? "json";
-            var outputFile = parseResult.GetValue(outputFileOption);
-            var includeTypes = parseResult.GetValue(includeOption);
-            var includeProperties = parseResult.GetValue(includePropertyOption);
+            var outputFile = parseResult.GetValue(outputFileArg)!;
             var logLevel = parseResult.GetValue(logLevelOption) ?? "minimal";
 
             return await RunAsync(
                 solutionFile,
                 changedFilesFile,
-                useStdin,
-                outputFormat,
                 outputFile,
-                includeTypes,
-                includeProperties,
                 logLevel,
                 ct);
         });
@@ -98,11 +61,7 @@ public static partial class Program
     private static async Task<int> RunAsync(
         FileInfo solutionFile,
         FileInfo? changedFilesFile,
-        bool useStdin,
-        string outputFormat,
-        FileInfo? outputFile,
-        string[]? includeTypes,
-        string[]? includeProperties,
+        FileInfo outputFile,
         string logLevel,
         CancellationToken ct)
     {
@@ -113,40 +72,22 @@ public static partial class Program
         {
             MsBuildBootstrap.Initialize();
 
-            var changedFiles = await ReadChangedFilesAsync(changedFilesFile, useStdin, ct);
-
-            var includedProperties = includeProperties is { Length: > 0 }
-                ? new HashSet<string>(includeProperties)
-                : null;
+            var changedFiles = await ReadChangedFilesAsync(changedFilesFile, ct);
 
             var reader = new MsBuildSolutionReader();
-            var resolver = new ProjectResolver(reader, logger, includedProperties);
+            var resolver = new ProjectResolver(reader, logger);
 
             var affected = await resolver.ResolveAffectedProjectsAsync(
                 solutionFile.FullName, changedFiles, ct);
 
-            // Filter by project type if specified
-            if (includeTypes is { Length: > 0 })
-            {
-                var types = ParseProjectTypes(includeTypes);
-                affected = affected.Where(p => types.Contains(p.Type)).ToList();
-            }
+            var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
 
-            var exporter = CreateExporter(outputFormat);
+            var filter = SolutionFilterBuilder.Build(solutionFile.FullName, outputDir, affected);
 
-            if (outputFile is not null)
-            {
-                var dir = outputFile.DirectoryName;
-                if (dir is not null && !Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
-
-                await using var writer = new StreamWriter(outputFile.FullName);
-                await exporter.ExportAsync(affected, writer, ct);
-            }
-            else
-            {
-                await exporter.ExportAsync(affected, Console.Out, ct);
-            }
+            await using var writer = new StreamWriter(outputFile.FullName);
+            await SolutionFilterWriter.WriteAsync(filter, writer, ct);
 
             return 0;
         }
@@ -163,7 +104,6 @@ public static partial class Program
 
     private static async Task<IReadOnlyList<FilePath>> ReadChangedFilesAsync(
         FileInfo? changedFilesFile,
-        bool useStdin,
         CancellationToken ct)
     {
         IEnumerable<string> lines;
@@ -172,7 +112,7 @@ public static partial class Program
         {
             lines = await File.ReadAllLinesAsync(changedFilesFile.FullName, ct);
         }
-        else if (useStdin || Console.IsInputRedirected)
+        else if (Console.IsInputRedirected)
         {
             var stdinLines = new List<string>();
             while (await Console.In.ReadLineAsync(ct) is { } line)
@@ -195,27 +135,6 @@ public static partial class Program
             .Select(fp => fp!.Value)
             .ToList();
     }
-
-    private static HashSet<ProjectType> ParseProjectTypes(string[] types)
-    {
-        var result = new HashSet<ProjectType>();
-        foreach (var t in types)
-        {
-            var ext = t.StartsWith('.') ? t : $".{t}";
-            if (ProjectTypeExtensions.TryFromExtension(ext, out var pt))
-                result.Add(pt);
-        }
-
-        return result;
-    }
-
-    private static IProjectExporter CreateExporter(string format) => format switch
-    {
-        "json" => new JsonExporter(),
-        "build" => new BuildExporter(),
-        "paths" => new PathsExporter(),
-        _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported output format"),
-    };
 
     private static ILoggerFactory CreateLoggerFactory(string logLevel)
     {
