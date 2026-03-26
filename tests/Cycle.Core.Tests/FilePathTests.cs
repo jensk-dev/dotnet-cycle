@@ -203,4 +203,36 @@ public class FilePathTests
 
         def.ShouldNotBe(valid);
     }
+
+    [Test]
+    public void FromString_WithInvalidCharacters_ThrowsArgumentException()
+    {
+        Should.Throw<ArgumentException>(() => FilePath.FromString("test\0file.cs"));
+    }
+
+    [Test]
+    public void TryFromCombinedStrings_WithEmptySubPath_ReturnsFalse()
+    {
+        var result = FilePath.TryFromCombinedStrings(Path.GetTempPath(), "", out _);
+
+        result.ShouldBeFalse();
+    }
+
+    [Test]
+    public void Equals_SamePath_ReturnsTrue()
+    {
+        var a = FilePath.FromString(Path.Combine(Path.GetTempPath(), "same.txt"));
+        var b = FilePath.FromString(Path.Combine(Path.GetTempPath(), "same.txt"));
+
+        a.ShouldBe(b);
+    }
+
+    [Test]
+    public void Equals_DifferentPaths_ReturnsFalse()
+    {
+        var a = FilePath.FromString(Path.Combine(Path.GetTempPath(), "one.txt"));
+        var b = FilePath.FromString(Path.Combine(Path.GetTempPath(), "two.txt"));
+
+        a.ShouldNotBe(b);
+    }
 }

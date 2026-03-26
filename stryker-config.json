@@ -1,5 +1,20 @@
 {
   "stryker-config": {
-    "test-runner": "mtp"
+    "test-runner": "mtp",
+    "reporters": ["html", "json", "progress"],
+    "thresholds": {
+      "high": 90,
+      "low": 85,
+      "break": 80
+    },
+    "mutate": [
+      "src/**/*.cs",
+      "!src/**/*.g.cs"
+    ],
+    "ignore-mutations": [
+      "string",
+      "regex"
+    ],
+    "concurrency": 4
   }
 }

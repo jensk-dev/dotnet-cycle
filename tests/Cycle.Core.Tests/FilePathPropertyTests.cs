@@ -62,4 +62,41 @@ public class FilePathPropertyTests
             }
         });
     }
+
+    private static Arbitrary<string> AdversarialFilePathStrings()
+    {
+        var gen = from count in Gen.Choose(1, 4)
+                  from segments in Gen.Elements(
+                          "src", "SRC", "Src", "models", "MODELS",
+                          "build", "a b c", "deeply", "nested")
+                      .ArrayOf(count)
+                  from name in Gen.Elements("File", "FILE", "file", "my file", "data.backup")
+                  from ext in Gen.Elements(".cs", ".CS", ".Cs", ".csproj", ".json")
+                  let path = Path.Combine(Path.GetTempPath(), Path.Combine(segments), $"{name}{ext}")
+                  where !Path.EndsInDirectorySeparator(path)
+                  select path;
+        return gen.ToArbitrary();
+    }
+
+    [FsCheck.NUnit.Property]
+    public Property EqualityIsSymmetric()
+    {
+        return Prop.ForAll(AdversarialFilePathStrings(), s =>
+        {
+            var a = FilePath.FromString(s);
+            var b = FilePath.FromString(s);
+            return a.Equals(b) == b.Equals(a);
+        });
+    }
+
+    [FsCheck.NUnit.Property]
+    public Property SeparatorNormalization_ConsistentAfterFullPathResolution()
+    {
+        return Prop.ForAll(ValidFilePathStrings(), s =>
+        {
+            var fp = FilePath.FromString(s);
+            var fromFullPath = FilePath.FromString(Path.GetFullPath(s));
+            return fp.Equals(fromFullPath);
+        });
+    }
 }

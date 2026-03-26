@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <CodeCoverage>
+    <ModulePaths>
+      <Include>
+        <ModulePath>.*Cycle\.Core\.dll$</ModulePath>
+        <ModulePath>.*Cycle\.Infrastructure\.MsBuild\.dll$</ModulePath>
+        <ModulePath>.*Cycle\.Presentation\.Cli\.dll$</ModulePath>
+      </Include>
+    </ModulePaths>
+    <Attributes>
+      <Exclude>
+        <Attribute>^System\.Diagnostics\.CodeAnalysis\.ExcludeFromCodeCoverageAttribute$</Attribute>
+        <Attribute>^System\.CodeDom\.Compiler\.GeneratedCodeAttribute$</Attribute>
+        <Attribute>^System\.Runtime\.CompilerServices\.CompilerGeneratedAttribute$</Attribute>
+      </Exclude>
+    </Attributes>
+    <Sources>
+      <Exclude>
+        <Source>.*\.g\.cs$</Source>
+      </Exclude>
+    </Sources>
+  </CodeCoverage>
+</Configuration>

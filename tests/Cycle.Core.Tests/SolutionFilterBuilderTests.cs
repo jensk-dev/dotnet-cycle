@@ -67,6 +67,32 @@ public class SolutionFilterBuilderTests
         result.SolutionPath.ShouldNotBeNullOrWhiteSpace();
     }
 
+    [Test]
+    public void Build_RelativeSolutionPath_ResolvesCorrectly()
+    {
+        var solutionPath = "MySolution.sln";
+        var outputDir = Directory.GetCurrentDirectory();
+        var projects = CreateProjects(
+            Path.Combine(Directory.GetCurrentDirectory(), "src", "A", "A.csproj"));
+
+        var result = SolutionFilterBuilder.Build(solutionPath, outputDir, projects);
+
+        result.SolutionPath.ShouldBe("MySolution.sln");
+    }
+
+    [Test]
+    public void Build_OutputDirDeeplyNested_SolutionPathHasMultipleParentRefs()
+    {
+        var repoDir = Path.Combine(Path.GetTempPath(), "repo");
+        var solutionPath = Path.Combine(repoDir, "MySolution.sln");
+        var outputDir = Path.Combine(repoDir, "a", "b", "c", "d");
+
+        var result = SolutionFilterBuilder.Build(solutionPath, outputDir, []);
+
+        result.SolutionPath.ShouldContain("..");
+        result.SolutionPath.ShouldEndWith("MySolution.sln");
+    }
+
     private static List<ProjectInfo> CreateProjects(params string[] paths) =>
         paths.Select(p => new ProjectInfo(
             Path.GetFileNameWithoutExtension(p),

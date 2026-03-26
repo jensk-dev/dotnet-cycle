@@ -20,6 +20,10 @@
       <ProjectReference Include="..\Cycle.Core\Cycle.Core.csproj" />
       <ProjectReference Include="..\Cycle.Infrastructure.MsBuild\Cycle.Infrastructure.MsBuild.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <InternalsVisibleTo Include="Cycle.Presentation.Cli.Tests" />
+    </ItemGroup>
     
 
 </Project>

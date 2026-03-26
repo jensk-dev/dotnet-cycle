@@ -90,6 +90,38 @@ public sealed class TempCsProj : IDisposable
         File.WriteAllText(ProjectFilePath, csProjContent);
     }
 
+    public void SetTargetFrameworks(string frameworks)
+    {
+        var csProjContent = File.ReadAllText(ProjectFilePath);
+        csProjContent = csProjContent.Replace(
+            "<PropertyGroup>",
+            $"<PropertyGroup>\n    <TargetFrameworks>{frameworks}</TargetFrameworks>");
+        File.WriteAllText(ProjectFilePath, csProjContent);
+    }
+
+    public string AddImport(string relativePath)
+    {
+        var absolutePath = Path.GetFullPath(Path.Combine(ProjectDirectory, relativePath));
+        var csProjContent = File.ReadAllText(ProjectFilePath);
+        csProjContent = csProjContent.Replace(
+            "</Project>",
+            $"<Import Project=\"{relativePath}\" />\n</Project>");
+        File.WriteAllText(ProjectFilePath, csProjContent);
+        return absolutePath;
+    }
+
+    public void CreateWithContent(string csprojContent)
+    {
+        _created = true;
+        Directory.CreateDirectory(ProjectDirectory);
+
+        if (File.Exists(ProjectFilePath))
+            throw new InvalidOperationException($"File {ProjectFilePath} already exists");
+
+        File.WriteAllText(ProjectFilePath, csprojContent);
+        _createdPaths.Add(ProjectFilePath);
+    }
+
     public void AddProjectReference(TempCsProj referenceToAdd)
     {
         var csProjContent = File.ReadAllText(ProjectFilePath);

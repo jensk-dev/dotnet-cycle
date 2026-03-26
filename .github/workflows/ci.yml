@@ -40,16 +40,40 @@ jobs:
       - name: Restore
         run: dotnet restore Cycle.slnx --locked-mode
 
+      - name: Restore tools
+        run: dotnet tool restore
+
       - name: Build
         run: dotnet build Cycle.slnx --no-restore -c Release --tl
 
       - name: Check formatting
         run: dotnet format Cycle.slnx --verify-no-changes --no-restore
 
-      - name: Test
+      - name: Test with coverage
         run: >-
-          dotnet test --solution Cycle.slnx --no-build -c Release
-          ${{ matrix.os == 'ubuntu-latest' && '--collect:"XPlat Code Coverage"' || '' }}
+          dotnet-coverage collect
+          --settings coverage.settings.xml
+          --output ${{ runner.temp }}/coverage/coverage.cobertura.xml
+          --output-format cobertura
+          "dotnet test --solution Cycle.slnx --no-build -c Release"
+
+      - name: Generate coverage report
+        run: >-
+          dotnet reportgenerator
+          "-reports:${{ runner.temp }}/coverage/coverage.cobertura.xml"
+          "-targetdir:${{ runner.temp }}/coverage-report"
+          "-reporttypes:HtmlInline_AzurePipelines;Cobertura;TextSummary"
+
+      - name: Print coverage summary
+        shell: bash
+        run: cat "${{ runner.temp }}/coverage-report/Summary.txt"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v4
+        with:
+          name: coverage-report-${{ matrix.os }}
+          path: ${{ runner.temp }}/coverage-report/
 
       - name: Pack
         if: matrix.os == 'windows-latest'
@@ -69,3 +93,53 @@ jobs:
         with:
           name: packages
           path: out/packages/Release/
+
+  stryker:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v4
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore Cycle.slnx --locked-mode
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Stryker - Cycle.Core
+        run: >-
+          dotnet stryker
+          --project src/Cycle.Core/Cycle.Core.csproj
+          --test-project tests/Cycle.Core.Tests/Cycle.Core.Tests.csproj
+          --output ${{ runner.temp }}/stryker-core
+
+      - name: Stryker - Cycle.Infrastructure.MsBuild
+        run: >-
+          dotnet stryker
+          --project src/Cycle.Infrastructure.MsBuild/Cycle.Infrastructure.MsBuild.csproj
+          --test-project tests/Cycle.Infrastructure.MsBuild.Tests/Cycle.Infrastructure.MsBuild.Tests.csproj
+          --output ${{ runner.temp }}/stryker-infra
+
+      - name: Upload Stryker reports
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v4
+        with:
+          name: stryker-reports
+          path: |
+            ${{ runner.temp }}/stryker-core/
+            ${{ runner.temp }}/stryker-infra/

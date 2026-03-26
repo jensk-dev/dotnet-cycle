@@ -49,8 +49,7 @@ public readonly record struct FilePath
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
 
-    public bool Equals(FilePath other) =>
-        FullPath is null ? other.FullPath is null : string.Equals(FullPath, other.FullPath, PathComparison);
+    public bool Equals(FilePath other) => string.Equals(FullPath, other.FullPath, PathComparison);
 
     public override string ToString() => FullPath;
 

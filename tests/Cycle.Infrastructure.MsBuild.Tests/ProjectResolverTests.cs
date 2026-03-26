@@ -236,6 +236,114 @@ public class ProjectResolverTests
         affected.Count.ShouldBe(0);
     }
 
+    [Test]
+    public async Task ResolveAffectedProjects_ImportFileChanged_ReturnsProject()
+    {
+        var projectA = CreateProject("ProjectA");
+        projectA.Create();
+        projectA.AddFileToProject("Class1.cs", ProjectItemType.Compile, false, "class A {}");
+
+        // Create a .props file and import it
+        var propsPath = Path.Combine(projectA.ProjectDirectory, "Common.props");
+        File.WriteAllText(propsPath, "<Project></Project>");
+        projectA.AddImport("Common.props");
+
+        var slnPath = CreateSolution(projectA);
+
+        var resolver = CreateResolver(slnPath);
+        var changed = new[] { Core.FilePath.FromString(propsPath) };
+
+        var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
+
+        affected.Count.ShouldBe(1);
+        affected[0].Name.ShouldBe("ProjectA");
+    }
+
+    [Test]
+    public async Task ResolveAffectedProjects_TargetsFileChanged_ReturnsProject()
+    {
+        var projectA = CreateProject("ProjectA");
+        projectA.Create();
+
+        var targetsPath = Path.Combine(projectA.ProjectDirectory, "Build.targets");
+        File.WriteAllText(targetsPath, "<Project></Project>");
+        projectA.AddImport("Build.targets");
+
+        var slnPath = CreateSolution(projectA);
+
+        var resolver = CreateResolver(slnPath);
+        var changed = new[] { Core.FilePath.FromString(targetsPath) };
+
+        var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
+
+        affected.Count.ShouldBe(1);
+        affected[0].Name.ShouldBe("ProjectA");
+    }
+
+    [Test]
+    public async Task ResolveAffectedProjects_MultiTargetFramework_FileInProject_ReturnsProject()
+    {
+        var projectA = CreateProject("ProjectA");
+        projectA.Create();
+        projectA.SetTargetFrameworks("net8.0;net10.0");
+        var (filePath, _) = projectA.AddFileToProject("Class1.cs", ProjectItemType.Compile, false, "class A {}");
+
+        var slnPath = CreateSolution(projectA);
+
+        var resolver = CreateResolver(slnPath);
+        var changed = new[] { Core.FilePath.FromString(filePath) };
+
+        var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
+
+        affected.Count.ShouldBe(1);
+        affected[0].Name.ShouldBe("ProjectA");
+    }
+
+    [Test]
+    public async Task ResolveAffectedProjects_InvalidProjectLoadFailure_TreatedAsAffected()
+    {
+        var projectA = CreateProject("ProjectA");
+        projectA.CreateWithContent("this is not valid xml");
+
+        var slnPath = CreateSolution(projectA);
+
+        var resolver = CreateResolver(slnPath);
+        var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, [], CancellationToken.None);
+
+        // Projects that fail to load are always included
+        affected.Count.ShouldBe(1);
+        affected[0].Name.ShouldBe("ProjectA");
+    }
+
+    [Test]
+    public async Task ResolveAffectedProjects_InvalidProjectReference_DoesNotThrow()
+    {
+        var projectA = CreateProject("ProjectA");
+        projectA.Create();
+        var (fileInA, _) = projectA.AddFileToProject("ClassA.cs", ProjectItemType.Compile, false, "class A {}");
+
+        // Add a reference to a project not in the solution
+        var csProjContent = File.ReadAllText(projectA.ProjectFilePath);
+        csProjContent = csProjContent.Replace("</Project>",
+            """
+            <ItemGroup>
+              <ProjectReference Include="..\NonExistent\NonExistent.csproj" />
+            </ItemGroup>
+            </Project>
+            """);
+        File.WriteAllText(projectA.ProjectFilePath, csProjContent);
+
+        var slnPath = CreateSolution(projectA);
+
+        var resolver = CreateResolver(slnPath);
+        var changed = new[] { Core.FilePath.FromString(fileInA) };
+
+        // Should not throw, and should still find ProjectA as affected
+        var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
+        affected.Count.ShouldBe(1);
+        affected[0].Name.ShouldBe("ProjectA");
+    }
+
     private TempCsProj CreateProject(string name)
     {
         var proj = new TempCsProj(Path.Combine(_testDir, name), name);

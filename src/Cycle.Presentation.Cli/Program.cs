@@ -58,7 +58,7 @@ public static partial class Program
         return await parseResult.InvokeAsync();
     }
 
-    private static async Task<int> RunAsync(
+    internal static async Task<int> RunAsync(
         FileInfo solutionFile,
         FileInfo? changedFilesFile,
         FileInfo outputFile,
@@ -72,7 +72,7 @@ public static partial class Program
         {
             MsBuildBootstrap.Initialize();
 
-            var changedFiles = await ReadChangedFilesAsync(changedFilesFile, ct);
+            var changedFiles = await ReadChangedFilesAsync(changedFilesFile, Console.In, Console.IsInputRedirected, ct);
 
             var reader = new MsBuildSolutionReader();
             var resolver = new ProjectResolver(reader, logger);
@@ -102,8 +102,10 @@ public static partial class Program
         }
     }
 
-    private static async Task<IReadOnlyList<FilePath>> ReadChangedFilesAsync(
+    internal static async Task<IReadOnlyList<FilePath>> ReadChangedFilesAsync(
         FileInfo? changedFilesFile,
+        TextReader stdinReader,
+        bool isInputRedirected,
         CancellationToken ct)
     {
         IEnumerable<string> lines;
@@ -112,10 +114,10 @@ public static partial class Program
         {
             lines = await File.ReadAllLinesAsync(changedFilesFile.FullName, ct);
         }
-        else if (Console.IsInputRedirected)
+        else if (isInputRedirected)
         {
             var stdinLines = new List<string>();
-            while (await Console.In.ReadLineAsync(ct) is { } line)
+            while (await stdinReader.ReadLineAsync(ct) is { } line)
             {
                 stdinLines.Add(line);
             }
@@ -136,7 +138,7 @@ public static partial class Program
             .ToList();
     }
 
-    private static ILoggerFactory CreateLoggerFactory(string logLevel)
+    internal static ILoggerFactory CreateLoggerFactory(string logLevel)
     {
         var level = logLevel switch
         {
