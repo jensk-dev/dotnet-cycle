@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     strategy:
@@ -14,29 +21,51 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7
+      - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v4
         with:
           global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Restore
         run: dotnet restore Cycle.slnx --locked-mode
 
       - name: Build
-        run: dotnet build Cycle.slnx --no-restore -c Release
+        run: dotnet build Cycle.slnx --no-restore -c Release --tl
+
+      - name: Check formatting
+        run: dotnet format Cycle.slnx --verify-no-changes --no-restore
 
       - name: Test
-        run: dotnet test --solution Cycle.slnx --no-build -c Release --collect:"XPlat Code Coverage"
+        run: >-
+          dotnet test --solution Cycle.slnx --no-build -c Release
+          ${{ matrix.os == 'ubuntu-latest' && '--collect:"XPlat Code Coverage"' || '' }}
 
       - name: Pack
+        if: matrix.os == 'windows-latest'
         run: dotnet pack Cycle.slnx --no-build -c Release
+
+      - name: Publish (trimmed, validation only)
+        if: matrix.os == 'ubuntu-latest'
+        run: >-
+          dotnet publish src/Cycle.Presentation.Cli/Cycle.Presentation.Cli.csproj
+          -c Release -r linux-x64 --self-contained
+          -p:PublishTrimmed=true
+          -p:SuppressTrimAnalysisWarnings=false
 
       - name: Upload packages
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v4
         with:
           name: packages
           path: out/packages/Release/

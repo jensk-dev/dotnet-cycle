@@ -4,20 +4,34 @@ on:
   push:
     tags: ['v*']
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: nuget-publish
     permissions:
-      contents: read
+      contents: write
+      id-token: write
+      attestations: write
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7
+      - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v4
         with:
           global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Restore
         run: dotnet restore Cycle.slnx --locked-mode
@@ -25,15 +39,25 @@ jobs:
       - name: Build
         run: dotnet build Cycle.slnx --no-restore -c Release
 
-      - name: Test
-        run: dotnet test --solution Cycle.slnx --no-build -c Release
-
       - name: Pack
         run: dotnet pack Cycle.slnx --no-build -c Release
 
-      - name: Push to NuGet
-        run: dotnet nuget push "out/packages/Release/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: out/packages/Release/*.nupkg
 
-      - name: Push symbols
-        run: dotnet nuget push "out/packages/Release/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-        continue-on-error: true
+      - name: Push to NuGet
+        run: >-
+          dotnet nuget push "out/packages/Release/*.*nupkg"
+          --api-key ${{ secrets.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release create "${{ github.ref_name }}"
+          out/packages/Release/*.nupkg out/packages/Release/*.snupkg
+          --generate-notes --title "${{ github.ref_name }}"
