@@ -115,6 +115,25 @@ public class SolutionFilterBuilderTests
     }
 
     [Test]
+    public void Build_ProjectPaths_AreSortedAlphabetically()
+    {
+        var repoDir = Path.Combine(Path.GetTempPath(), "repo");
+        var solutionPath = Path.Combine(repoDir, "MySolution.sln");
+        var outputDir = repoDir;
+        var projects = CreateProjects(
+            Path.Combine(repoDir, "src", "C", "C.csproj"),
+            Path.Combine(repoDir, "src", "A", "A.csproj"),
+            Path.Combine(repoDir, "src", "B", "B.csproj"));
+
+        var result = SolutionFilterBuilder.Build(solutionPath, outputDir, projects);
+
+        result.Projects.Count.ShouldBe(3);
+        result.Projects[0].ShouldBe("src/A/A.csproj");
+        result.Projects[1].ShouldBe("src/B/B.csproj");
+        result.Projects[2].ShouldBe("src/C/C.csproj");
+    }
+
+    [Test]
     public void Build_ProjectPaths_UseForwardSlashes()
     {
         var repoDir = Path.Combine(Path.GetTempPath(), "repo");

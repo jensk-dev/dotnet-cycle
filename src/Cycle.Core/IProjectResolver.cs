@@ -2,7 +2,7 @@
 
 public interface IProjectResolver
 {
-    Task<IReadOnlyList<ProjectInfo>> ResolveAffectedProjectsAsync(
+    Task<ResolutionResult> ResolveAffectedProjectsAsync(
         string solutionPath,
         IReadOnlyList<FilePath> changedFiles,
         CancellationToken ct);

@@ -14,7 +14,7 @@ public sealed partial class ProjectResolver(
 {
     private readonly ILogger<ProjectResolver> _logger = loggerFactory.CreateLogger<ProjectResolver>();
 
-    public async Task<IReadOnlyList<ProjectInfo>> ResolveAffectedProjectsAsync(
+    public async Task<ResolutionResult> ResolveAffectedProjectsAsync(
         string solutionPath,
         IReadOnlyList<FilePath> changedFiles,
         CancellationToken ct)
@@ -33,7 +33,8 @@ public sealed partial class ProjectResolver(
         var projectLookup = loadedProjects.ToDictionary(p => p.Info.FilePath, p => p.Info);
 
         // Projects that fail to load are always added to the output to prevent regression from silently passing CI.
-        foreach (var loaded in loadedProjects.Where(p => p.MsbProject is null))
+        var failedProjects = loadedProjects.Where(p => p.MsbProject is null).ToList();
+        foreach (var loaded in failedProjects)
         {
             affected.TryAdd(loaded.Info.FilePath, loaded.Info);
         }
@@ -45,7 +46,7 @@ public sealed partial class ProjectResolver(
             FindAffectedProjects(changedFile, loadedProjects, reverseMap, projectLookup, affected);
         }
 
-        return affected.Values.ToList();
+        return new ResolutionResult(affected.Values.ToList(), solutionProjects.Count, failedProjects.Count);
     }
 
     private static void FindAffectedProjects(
@@ -236,7 +237,8 @@ public sealed partial class ProjectResolver(
             catch (Exception ex)
             {
                 results.Add(new LoadedProject(projectInfo, null, null, null));
-                LogProjectLoadFailed(projectInfo.FilePath.FullPath, ex);
+                LogProjectLoadFailed(projectInfo.FilePath.FullPath, ex.Message);
+                LogProjectLoadFailedDetails(projectInfo.FilePath.FullPath, ex);
             }
         }
 
@@ -300,8 +302,11 @@ public sealed partial class ProjectResolver(
     [LoggerMessage(Level = LogLevel.Debug, Message = "Loaded project {ProjectPath}")]
     private partial void LogProjectLoaded(string projectPath);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to load project {ProjectPath}. It will be treated as affected")]
-    private partial void LogProjectLoadFailed(string projectPath, Exception ex);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to load project {ProjectPath}: {Reason}. It will be treated as affected")]
+    private partial void LogProjectLoadFailed(string projectPath, string reason);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Failed to load project {ProjectPath}")]
+    private partial void LogProjectLoadFailedDetails(string projectPath, Exception ex);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Project {ReferencePath} is referenced by {ProjectPath} but was not found in the solution")]
     private partial void LogProjectReferenceNotFound(string referencePath, string projectPath);

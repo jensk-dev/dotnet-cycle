@@ -76,7 +76,7 @@ public static partial class Program
             var reader = new MsBuildSolutionReader();
             var resolver = new ProjectResolver(reader, loggerFactory);
 
-            var affected = await resolver.ResolveAffectedProjectsAsync(
+            var result = await resolver.ResolveAffectedProjectsAsync(
                 solutionFile.FullName, changedFiles, ct);
 
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;
@@ -85,10 +85,16 @@ public static partial class Program
                 Directory.CreateDirectory(outputDir);
             }
 
-            var filter = SolutionFilterBuilder.Build(solutionFile.FullName, outputDir, affected);
+            var filter = SolutionFilterBuilder.Build(solutionFile.FullName, outputDir, result.AffectedProjects);
 
             await using var writer = new StreamWriter(outputFile.FullName);
             await SolutionFilterWriter.WriteAsync(filter, writer, ct);
+
+            var included = result.AffectedProjects.Count;
+            var filteredOut = result.TotalProjectCount - included;
+            var failed = result.FailedProjectCount;
+            await Console.Error.WriteLineAsync(
+                $"Solution has {result.TotalProjectCount} projects, filter includes {included} ({failed} failed to load), filtered out {filteredOut}");
 
             return 0;
         }

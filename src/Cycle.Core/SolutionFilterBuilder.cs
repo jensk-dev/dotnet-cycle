@@ -21,6 +21,7 @@ public static class SolutionFilterBuilder
         var relativeProjectPaths = affectedProjects
             .Select(p => Path.GetRelativePath(solutionDir, p.FilePath.FullPath)
                 .Replace('\\', '/'))
+            .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         return new SolutionFilter(relativeSolutionPath, relativeProjectPaths);
