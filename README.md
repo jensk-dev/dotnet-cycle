@@ -113,6 +113,14 @@ git diff --name-only main...feature  # compares B vs E
 
 Use three dots (`...`) for feature branches. For consecutive commits on the same branch (e.g. `HEAD~1...HEAD`), both forms are equivalent.
 
+## Known Limitations
+
+Cycle traces the **MSBuild project graph** — `ProjectReference`, imports, and item references. Coupling that exists only at runtime or by convention is invisible to it.
+
+The most common example is **serialization contracts across service boundaries**. Two services independently define the same JSON object — one serializes it, the other deserializes it. If the contract changes in one project, cycle has no way to know the other project is affected because there is no build-level dependency linking them. Integration or end-to-end tests that cover that contract will not be included in the filter.
+
+The same applies to any implicit contract that lives outside the build graph: shared message schemas, REST or gRPC contracts defined independently in each service, database schemas, or configuration files consumed across service boundaries.
+
 ## Building from Source
 
 ```bash
