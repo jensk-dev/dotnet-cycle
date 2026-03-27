@@ -66,23 +66,24 @@ public static partial class Program
         CancellationToken ct)
     {
         using var loggerFactory = CreateLoggerFactory(logLevel);
-        var logger = loggerFactory.CreateLogger<ProjectResolver>();
+        var logger = loggerFactory.CreateLogger(nameof(Program));
 
         try
         {
             MsBuildBootstrap.Initialize();
-
-            var changedFiles = await ReadChangedFilesAsync(changedFilesFile, Console.In, Console.IsInputRedirected, ct);
+            var changedFiles = await ReadChangedFilesAsync(changedFilesFile, Console.In, Console.IsInputRedirected, logger, ct);
 
             var reader = new MsBuildSolutionReader();
-            var resolver = new ProjectResolver(reader, logger);
+            var resolver = new ProjectResolver(reader, loggerFactory);
 
             var affected = await resolver.ResolveAffectedProjectsAsync(
                 solutionFile.FullName, changedFiles, ct);
 
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;
             if (!Directory.Exists(outputDir))
+            {
                 Directory.CreateDirectory(outputDir);
+            }
 
             var filter = SolutionFilterBuilder.Build(solutionFile.FullName, outputDir, affected);
 
@@ -106,6 +107,7 @@ public static partial class Program
         FileInfo? changedFilesFile,
         TextReader stdinReader,
         bool isInputRedirected,
+        ILogger logger,
         CancellationToken ct)
     {
         IEnumerable<string> lines;
@@ -129,13 +131,26 @@ public static partial class Program
             return [];
         }
 
-        return lines
-            .Select(l => l.Trim())
-            .Where(l => l.Length > 0)
-            .Select(l => FilePath.TryFromString(l, out var fp) ? fp.Value : (FilePath?)null)
-            .Where(fp => fp is not null)
-            .Select(fp => fp!.Value)
-            .ToList();
+        var results = new List<FilePath>();
+        foreach (var raw in lines)
+        {
+            var trimmed = raw.Trim();
+            if (trimmed.Length == 0)
+            {
+                continue;
+            }
+
+            if (FilePath.TryFromString(trimmed, out var fp))
+            {
+                results.Add(fp.Value);
+            }
+            else
+            {
+                LogSkippingInvalidPath(logger, trimmed);
+            }
+        }
+
+        return results;
     }
 
     internal static ILoggerFactory CreateLoggerFactory(string logLevel)
@@ -159,6 +174,9 @@ public static partial class Program
             });
         });
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Skipping invalid path: {Path}")]
+    private static partial void LogSkippingInvalidPath(ILogger logger, string path);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Cycle failed")]
     private static partial void LogCycleFailed(ILogger logger, Exception ex);

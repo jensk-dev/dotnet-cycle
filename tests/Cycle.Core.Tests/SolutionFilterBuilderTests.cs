@@ -41,8 +41,8 @@ public class SolutionFilterBuilderTests
         var result = SolutionFilterBuilder.Build(solutionPath, outputDir, projects);
 
         result.Projects.Count.ShouldBe(2);
-        result.Projects[0].ShouldBe(Path.Combine("src", "A", "A.csproj"));
-        result.Projects[1].ShouldBe(Path.Combine("src", "B", "B.fsproj"));
+        result.Projects[0].ShouldBe("src/A/A.csproj");
+        result.Projects[1].ShouldBe("src/B/B.fsproj");
     }
 
     [Test]
@@ -91,6 +91,39 @@ public class SolutionFilterBuilderTests
 
         result.SolutionPath.ShouldContain("..");
         result.SolutionPath.ShouldEndWith("MySolution.sln");
+    }
+
+    [Test]
+    public void Build_WithNullSolutionPath_ThrowsArgumentException()
+    {
+        Should.Throw<ArgumentException>(
+            () => SolutionFilterBuilder.Build(null!, "output", []));
+    }
+
+    [Test]
+    public void Build_WithNullOutputDirectory_ThrowsArgumentException()
+    {
+        Should.Throw<ArgumentException>(
+            () => SolutionFilterBuilder.Build("sln.sln", null!, []));
+    }
+
+    [Test]
+    public void Build_WithNullProjects_ThrowsArgumentNullException()
+    {
+        Should.Throw<ArgumentNullException>(
+            () => SolutionFilterBuilder.Build("sln.sln", "output", null!));
+    }
+
+    [Test]
+    public void Build_ProjectPaths_UseForwardSlashes()
+    {
+        var repoDir = Path.Combine(Path.GetTempPath(), "repo");
+        var solutionPath = Path.Combine(repoDir, "MySolution.sln");
+        var projects = CreateProjects(Path.Combine(repoDir, "src", "A", "A.csproj"));
+
+        var result = SolutionFilterBuilder.Build(solutionPath, repoDir, projects);
+
+        result.Projects[0].ShouldNotContain("\\");
     }
 
     private static List<ProjectInfo> CreateProjects(params string[] paths) =>

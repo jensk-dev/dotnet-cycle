@@ -8,7 +8,9 @@ public readonly record struct FilePath
     private FilePath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
+        {
             throw new ArgumentException("Path cannot be null or empty", nameof(path));
+        }
 
         try
         {
@@ -16,9 +18,6 @@ public readonly record struct FilePath
             DirectoryName = Path.GetDirectoryName(FullPath)!;
             FileName = Path.GetFileName(FullPath);
             Extension = Path.GetExtension(FullPath);
-
-            if (Path.EndsInDirectorySeparator(FullPath))
-                throw new ArgumentException("Path must point to a file, not a directory", nameof(path));
         }
         catch (Exception ex) when (ex is ArgumentException
                                        or SecurityException
@@ -26,6 +25,11 @@ public readonly record struct FilePath
                                        or PathTooLongException)
         {
             throw new ArgumentException($"Invalid file path: {path}", nameof(path), ex);
+        }
+
+        if (Path.EndsInDirectorySeparator(FullPath))
+        {
+            throw new ArgumentException("Path must point to a file, not a directory", nameof(path));
         }
     }
 
@@ -102,6 +106,13 @@ public readonly record struct FilePath
 
     public static FilePath FromString(string path) => new(path);
 
-    public static FilePath FromCombinedStrings(string basePath, string subPath) =>
-        new(Path.Combine(basePath, subPath));
+    public static FilePath FromCombinedStrings(string basePath, string subPath)
+    {
+        if (!TryFromCombinedStrings(basePath, subPath, out var filePath))
+        {
+            throw new ArgumentException($"Invalid combined path: {basePath} + {subPath}");
+        }
+
+        return filePath.Value;
+    }
 }

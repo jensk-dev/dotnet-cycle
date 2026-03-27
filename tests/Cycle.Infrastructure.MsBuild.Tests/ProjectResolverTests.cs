@@ -26,11 +26,16 @@ public class ProjectResolverTests
     public void TearDown()
     {
         foreach (var d in _disposables)
+        {
             d.Dispose();
+        }
+
         _disposables.Clear();
 
         if (Directory.Exists(_testDir))
+        {
             Directory.Delete(_testDir, true);
+        }
     }
 
     [Test]
@@ -41,7 +46,7 @@ public class ProjectResolverTests
         var (filePath, _) = projectA.AddFileToProject("Class1.cs", ProjectItemType.Compile, false, "class A {}");
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -57,7 +62,7 @@ public class ProjectResolverTests
         projectA.Create();
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(projectA.ProjectFilePath) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -78,7 +83,7 @@ public class ProjectResolverTests
         var unrelatedFile = Path.Combine(_testDir, "unrelated.txt");
         File.WriteAllText(unrelatedFile, "unrelated");
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(unrelatedFile) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -104,7 +109,7 @@ public class ProjectResolverTests
 
         var slnPath = CreateSolution(projectC, projectB, projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(fileInC) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -128,7 +133,7 @@ public class ProjectResolverTests
 
         var slnPath = CreateSolution(projectA, projectB);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(fileInA) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -146,7 +151,7 @@ public class ProjectResolverTests
         var (filePath, _) = projectA.AddFileToProject("data.json", ProjectItemType.Content, false, "{}");
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -163,7 +168,7 @@ public class ProjectResolverTests
         var (filePath, _) = projectA.AddFileToProject("resource.resx", ProjectItemType.EmbeddedResource, false, "<root/>");
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -182,7 +187,7 @@ public class ProjectResolverTests
         // Delete the file to simulate a deleted changed file
         File.Delete(filePath);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -207,7 +212,7 @@ public class ProjectResolverTests
 
         var slnPath = CreateSolution(projectA, projectB);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[]
         {
             Core.FilePath.FromString(fileA),
@@ -229,7 +234,7 @@ public class ProjectResolverTests
         projectA.AddFileToProject("A.cs", ProjectItemType.Compile, false, "class A {}");
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, [], CancellationToken.None);
 
@@ -250,7 +255,7 @@ public class ProjectResolverTests
 
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(propsPath) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -271,7 +276,7 @@ public class ProjectResolverTests
 
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(targetsPath) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -290,7 +295,7 @@ public class ProjectResolverTests
 
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
@@ -307,7 +312,7 @@ public class ProjectResolverTests
 
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, [], CancellationToken.None);
 
         // Projects that fail to load are always included
@@ -335,13 +340,53 @@ public class ProjectResolverTests
 
         var slnPath = CreateSolution(projectA);
 
-        var resolver = CreateResolver(slnPath);
+        var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(fileInA) };
 
         // Should not throw, and should still find ProjectA as affected
         var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
         affected.Count.ShouldBe(1);
         affected[0].Name.ShouldBe("ProjectA");
+    }
+
+    // todo: is this correct? should it not resolve both items?
+    [Test]
+    public async Task ResolveAffectedProjects_MultiTfm_MultipleChangedFiles_FindsAllCorrectly()
+    {
+        var projectA = CreateProject("ProjectA");
+        projectA.Create();
+        projectA.SetTargetFrameworks("net8.0;net10.0");
+        var (fileA, _) = projectA.AddFileToProject("ClassA.cs", ProjectItemType.Compile, false, "class A {}");
+        var (fileB, _) = projectA.AddFileToProject("ClassB.cs", ProjectItemType.Compile, false, "class B {}");
+
+        var slnPath = CreateSolution(projectA);
+
+        var resolver = CreateResolver();
+        var changed = new[]
+        {
+            Core.FilePath.FromString(fileA),
+            Core.FilePath.FromString(fileB),
+        };
+
+        var affected = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
+
+        affected.Count.ShouldBe(1);
+        affected[0].Name.ShouldBe("ProjectA");
+    }
+
+    [Test]
+    public void ResolveAffectedProjects_WithCancelledToken_ThrowsOperationCanceled()
+    {
+        var projectA = CreateProject("ProjectA");
+        projectA.Create();
+        var slnPath = CreateSolution(projectA);
+
+        var resolver = CreateResolver();
+        var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        Should.ThrowAsync<OperationCanceledException>(
+            () => resolver.ResolveAffectedProjectsAsync(slnPath, [], cts.Token));
     }
 
     private TempCsProj CreateProject(string name)
@@ -351,28 +396,12 @@ public class ProjectResolverTests
         return proj;
     }
 
-    private string CreateSolution(params TempCsProj[] projects)
-    {
-        var slnPath = Path.Combine(_testDir, "Test.slnx");
-        var projectEntries = string.Join(Environment.NewLine,
-            projects.Select(p =>
-                $"    <Project Path=\"{Path.GetRelativePath(_testDir, p.ProjectFilePath)}\" />"));
+    private string CreateSolution(params TempCsProj[] projects) =>
+        TempSlnx.Create(_testDir, projects);
 
-        var content = $"""
-                       <Solution>
-                         <Folder Name="/src/">
-                       {projectEntries}
-                         </Folder>
-                       </Solution>
-                       """;
-
-        File.WriteAllText(slnPath, content);
-        return slnPath;
-    }
-
-    private static ProjectResolver CreateResolver(string slnPath)
+    private static ProjectResolver CreateResolver()
     {
         var reader = new MsBuildSolutionReader();
-        return new ProjectResolver(reader, NullLogger<ProjectResolver>.Instance);
+        return new ProjectResolver(reader, NullLoggerFactory.Instance);
     }
 }

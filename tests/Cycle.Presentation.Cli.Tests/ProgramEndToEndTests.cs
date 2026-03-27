@@ -25,7 +25,9 @@ public class ProgramEndToEndTests
     public void TearDown()
     {
         if (Directory.Exists(_testDir))
+        {
             Directory.Delete(_testDir, true);
+        }
     }
 
     [Test]

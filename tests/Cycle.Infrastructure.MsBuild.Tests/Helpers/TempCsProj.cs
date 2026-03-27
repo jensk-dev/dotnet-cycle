@@ -29,7 +29,9 @@ public sealed class TempCsProj : IDisposable
         Directory.CreateDirectory(ProjectDirectory);
 
         if (File.Exists(ProjectFilePath))
+        {
             throw new InvalidOperationException($"File {ProjectFilePath} already exists");
+        }
 
         File.WriteAllText(ProjectFilePath, DefaultCsProjContent);
         _createdPaths.Add(ProjectFilePath);
@@ -54,7 +56,9 @@ public sealed class TempCsProj : IDisposable
     public string AddFile(string filePath, bool isAbsolute, string? content = null)
     {
         if (!_created)
+        {
             throw new InvalidOperationException("Project has not been created yet");
+        }
 
         var path = isAbsolute
             ? Path.GetFullPath(filePath)
@@ -116,7 +120,9 @@ public sealed class TempCsProj : IDisposable
         Directory.CreateDirectory(ProjectDirectory);
 
         if (File.Exists(ProjectFilePath))
+        {
             throw new InvalidOperationException($"File {ProjectFilePath} already exists");
+        }
 
         File.WriteAllText(ProjectFilePath, csprojContent);
         _createdPaths.Add(ProjectFilePath);
@@ -141,18 +147,22 @@ public sealed class TempCsProj : IDisposable
     public void Dispose()
     {
         if (_disposed)
+        {
             return;
+        }
 
         foreach (var path in _createdPaths)
         {
-            if (Directory.Exists(path))
-                Directory.Delete(path, true);
-            else if (File.Exists(path))
+            if (File.Exists(path))
+            {
                 File.Delete(path);
+            }
         }
 
         if (Directory.Exists(ProjectDirectory))
+        {
             Directory.Delete(ProjectDirectory, true);
+        }
 
         _disposed = true;
     }

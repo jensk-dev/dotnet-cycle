@@ -91,6 +91,22 @@ public class SolutionFilterWriterTests
     }
 
     [Test]
+    public void WriteAsync_WithNullFilter_ThrowsArgumentNullException()
+    {
+        Should.ThrowAsync<ArgumentNullException>(
+            () => SolutionFilterWriter.WriteAsync(null!, _output, CancellationToken.None));
+    }
+
+    [Test]
+    public void WriteAsync_WithNullOutput_ThrowsArgumentNullException()
+    {
+        var filter = new SolutionFilter("MySolution.sln", []);
+
+        Should.ThrowAsync<ArgumentNullException>(
+            () => SolutionFilterWriter.WriteAsync(filter, null!, CancellationToken.None));
+    }
+
+    [Test]
     public async Task WriteAsync_HasCorrectSlnfStructure()
     {
         var filter = new SolutionFilter("MySolution.sln", ["src/A/A.csproj"]);

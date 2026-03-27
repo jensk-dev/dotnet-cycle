@@ -6,7 +6,7 @@ public class FilePathTests
     [Test]
     public void FromString_WithValidPath_CreatesFilePath()
     {
-        var path = FilePath.FromString(Path.GetTempFileName());
+        var path = FilePath.FromString(Path.Combine(Path.GetTempPath(), "test-file.tmp"));
 
         path.FullPath.ShouldNotBeNullOrWhiteSpace();
         path.FileName.ShouldNotBeNullOrWhiteSpace();
@@ -24,7 +24,7 @@ public class FilePathTests
     [Test]
     public void FromString_ExtractsComponents()
     {
-        var tempFile = Path.GetTempFileName();
+        var tempFile = Path.Combine(Path.GetTempPath(), "test-extract.tmp");
         var path = FilePath.FromString(tempFile);
 
         path.FileName.ShouldBe(Path.GetFileName(tempFile));

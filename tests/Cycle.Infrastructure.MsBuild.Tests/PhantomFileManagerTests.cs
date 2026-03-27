@@ -1,4 +1,5 @@
 ﻿using Cycle.Core;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Cycle.Infrastructure.MsBuild.Tests;
@@ -19,13 +20,15 @@ public class PhantomFileManagerTests
     public void TearDown()
     {
         if (Directory.Exists(_testDir))
+        {
             Directory.Delete(_testDir, true);
+        }
     }
 
     [Test]
     public void CreatePhantomFiles_FileDoesNotExist_CreatesFile()
     {
-        using var manager = new PhantomFileManager(NullLogger<PhantomFileManager>.Instance);
+        using var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var filePath = FilePath.FromString(Path.Combine(_testDir, "phantom.cs"));
 
         manager.CreatePhantomFiles([filePath], new HashSet<FilePath>());
@@ -39,7 +42,7 @@ public class PhantomFileManagerTests
     {
         var fullPath = Path.Combine(_testDir, "existing.cs");
         File.WriteAllText(fullPath, "original content");
-        using var manager = new PhantomFileManager(NullLogger<PhantomFileManager>.Instance);
+        using var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var filePath = FilePath.FromString(fullPath);
 
         manager.CreatePhantomFiles([filePath], new HashSet<FilePath>());
@@ -50,7 +53,7 @@ public class PhantomFileManagerTests
     [Test]
     public void CreatePhantomFiles_FileIsProjectFile_SkipsCreation()
     {
-        using var manager = new PhantomFileManager(NullLogger<PhantomFileManager>.Instance);
+        using var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var filePath = FilePath.FromString(Path.Combine(_testDir, "Project.csproj"));
         var projectFiles = new HashSet<FilePath> { filePath };
 
@@ -62,7 +65,7 @@ public class PhantomFileManagerTests
     [Test]
     public void CreatePhantomFiles_DuplicateFile_CreatesOnce()
     {
-        using var manager = new PhantomFileManager(NullLogger<PhantomFileManager>.Instance);
+        using var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var filePath = FilePath.FromString(Path.Combine(_testDir, "dup.cs"));
 
         manager.CreatePhantomFiles([filePath, filePath], new HashSet<FilePath>());
@@ -73,7 +76,7 @@ public class PhantomFileManagerTests
     [Test]
     public void CreatePhantomFiles_DirectoryDoesNotExist_CreatesDirectory()
     {
-        using var manager = new PhantomFileManager(NullLogger<PhantomFileManager>.Instance);
+        using var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var filePath = FilePath.FromString(Path.Combine(_testDir, "subdir", "deep", "file.cs"));
 
         manager.CreatePhantomFiles([filePath], new HashSet<FilePath>());
@@ -85,7 +88,7 @@ public class PhantomFileManagerTests
     [Test]
     public void Dispose_DeletesAllCreatedFiles()
     {
-        var manager = new PhantomFileManager(NullLogger<PhantomFileManager>.Instance);
+        var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var file1 = FilePath.FromString(Path.Combine(_testDir, "a.cs"));
         var file2 = FilePath.FromString(Path.Combine(_testDir, "b.cs"));
 
@@ -102,7 +105,7 @@ public class PhantomFileManagerTests
     [Test]
     public void Dispose_CalledTwice_IsIdempotent()
     {
-        var manager = new PhantomFileManager(NullLogger<PhantomFileManager>.Instance);
+        var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var filePath = FilePath.FromString(Path.Combine(_testDir, "idem.cs"));
 
         manager.CreatePhantomFiles([filePath], new HashSet<FilePath>());
@@ -114,7 +117,7 @@ public class PhantomFileManagerTests
     [Test]
     public void Dispose_FileAlreadyDeleted_DoesNotThrow()
     {
-        var manager = new PhantomFileManager(NullLogger<PhantomFileManager>.Instance);
+        var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var filePath = FilePath.FromString(Path.Combine(_testDir, "gone.cs"));
 
         manager.CreatePhantomFiles([filePath], new HashSet<FilePath>());
@@ -124,10 +127,26 @@ public class PhantomFileManagerTests
     }
 
     [Test]
+    public void Dispose_DeletesCreatedDirectories()
+    {
+        var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
+        var subDir = Path.Combine(_testDir, "newdir", "deep");
+        var filePath = FilePath.FromString(Path.Combine(subDir, "phantom.cs"));
+
+        manager.CreatePhantomFiles([filePath], new HashSet<FilePath>());
+        Directory.Exists(subDir).ShouldBeTrue();
+
+        manager.Dispose();
+
+        File.Exists(filePath.FullPath).ShouldBeFalse();
+        Directory.Exists(subDir).ShouldBeFalse();
+    }
+
+    [Test]
     [Platform(Include = "Win")]
     public void Dispose_ReadOnlyFile_LogsWarningAndContinues()
     {
-        var manager = new PhantomFileManager(NullLogger<PhantomFileManager>.Instance);
+        var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var filePath = FilePath.FromString(Path.Combine(_testDir, "readonly.cs"));
 
         manager.CreatePhantomFiles([filePath], new HashSet<FilePath>());

@@ -7,14 +7,20 @@ public static class SolutionFilterBuilder
         string outputDirectory,
         IReadOnlyList<ProjectInfo> affectedProjects)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(solutionFilePath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
+        ArgumentNullException.ThrowIfNull(affectedProjects);
+
         var absoluteSolutionPath = Path.GetFullPath(solutionFilePath);
         var absoluteOutputDir = Path.GetFullPath(outputDirectory);
         var solutionDir = Path.GetDirectoryName(absoluteSolutionPath)!;
 
-        var relativeSolutionPath = Path.GetRelativePath(absoluteOutputDir, absoluteSolutionPath);
+        var relativeSolutionPath = Path.GetRelativePath(absoluteOutputDir, absoluteSolutionPath)
+            .Replace('\\', '/');
 
         var relativeProjectPaths = affectedProjects
-            .Select(p => Path.GetRelativePath(solutionDir, p.FilePath.FullPath))
+            .Select(p => Path.GetRelativePath(solutionDir, p.FilePath.FullPath)
+                .Replace('\\', '/'))
             .ToList();
 
         return new SolutionFilter(relativeSolutionPath, relativeProjectPaths);
