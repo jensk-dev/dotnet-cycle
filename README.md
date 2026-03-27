@@ -26,7 +26,7 @@ cycle <solution-path> <output-file> [options]
 | Option | Description | Default |
 |---|---|---|
 | `--changed-files <path>` | File containing changed file paths (one per line) | |
-| `--closure` | Include transitive build dependencies (ProjectReferences) so the filter is buildable | `false` |
+| `--no-closure` | Exclude transitive build dependencies (ProjectReferences) from the filter | `false` |
 | `--log-level <level>` | Log verbosity: `quiet`, `minimal`, `normal`, `verbose` | `minimal` |
 
 Changed files are read from `--changed-files` if provided, otherwise from stdin when input is piped.
@@ -36,16 +36,14 @@ Changed files are read from `--changed-files` if provided, otherwise from stdin 
 Build and test only what changed on a feature branch:
 
 ```bash
-git diff --name-only origin/main...HEAD | cycle MySolution.slnx affected.slnf --closure
-dotnet build affected.slnf
+git diff --name-only origin/main...HEAD | cycle MySolution.slnx affected.slnfdotnet build affected.slnf
 dotnet test affected.slnf
 ```
 
 Build only what changed in the most recent commit on main:
 
 ```bash
-git diff --name-only HEAD~1...HEAD | cycle MySolution.slnx affected.slnf --closure
-dotnet build affected.slnf
+git diff --name-only HEAD~1...HEAD | cycle MySolution.slnx affected.slnfdotnet build affected.slnf
 ```
 
 Use a file list:

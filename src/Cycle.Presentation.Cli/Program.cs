@@ -31,9 +31,9 @@ public static partial class Program
         };
         logLevelOption.AcceptOnlyFromAmong("quiet", "minimal", "normal", "verbose");
 
-        var closureOption = new Option<bool>("--closure")
+        var noClosureOption = new Option<bool>("--no-closure")
         {
-            Description = "Include transitive build dependencies (ProjectReferences) so the filter is buildable",
+            Description = "Exclude transitive build dependencies (ProjectReferences) from the filter",
         };
 
         var rootCommand = new RootCommand("Generates a solution filter (.slnf) from a list of changed files")
@@ -42,7 +42,7 @@ public static partial class Program
             outputFileArg,
             changedFilesOption,
             logLevelOption,
-            closureOption,
+            noClosureOption,
         };
 
         rootCommand.SetAction(async (parseResult, ct) =>
@@ -51,7 +51,7 @@ public static partial class Program
             var changedFilesFile = parseResult.GetValue(changedFilesOption);
             var outputFile = parseResult.GetValue(outputFileArg)!;
             var logLevel = parseResult.GetValue(logLevelOption) ?? "minimal";
-            var includeClosure = parseResult.GetValue(closureOption);
+            var includeClosure = !parseResult.GetValue(noClosureOption);
 
             return await RunAsync(
                 solutionFile,
