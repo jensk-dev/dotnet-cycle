@@ -1,29 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <PackAsTool>true</PackAsTool>
-        <ToolCommandName>cycle</ToolCommandName>
-        <PackageId>cycle</PackageId>
-        <Description>Generates a solution filter (.slnf) from affected .NET projects</Description>
-        <IsTrimmable>true</IsTrimmable>
-        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>cycle</ToolCommandName>
+    <PackageId>cycle</PackageId>
+    <Description>Generates a solution filter (.slnf) from affected .NET projects</Description>
+    <IsTrimmable>true</IsTrimmable>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="System.CommandLine" />
-      <PackageReference Include="Microsoft.Extensions.Logging" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Console" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Cycle.Core\Cycle.Core.csproj" />
-      <ProjectReference Include="..\Cycle.Infrastructure.MsBuild\Cycle.Infrastructure.MsBuild.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cycle.Core\Cycle.Core.csproj" />
+    <ProjectReference Include="..\Cycle.Infrastructure.MsBuild\Cycle.Infrastructure.MsBuild.csproj" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <InternalsVisibleTo Include="Cycle.Presentation.Cli.Tests" />
-    </ItemGroup>
-    
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cycle.Presentation.Cli.Tests" />
+  </ItemGroup>
 
 </Project>

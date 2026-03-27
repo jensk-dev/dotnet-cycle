@@ -8,9 +8,17 @@ public static class MsBuildBootstrap
 
     public static void Initialize()
     {
-        if (Interlocked.Exchange(ref _initialized, 1) == 0)
+        if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0)
         {
-            MSBuildLocator.RegisterDefaults();
+            try
+            {
+                MSBuildLocator.RegisterDefaults();
+            }
+            catch
+            {
+                Interlocked.Exchange(ref _initialized, 0);
+                throw;
+            }
         }
     }
 }

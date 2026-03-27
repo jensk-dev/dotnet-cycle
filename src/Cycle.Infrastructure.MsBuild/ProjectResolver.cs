@@ -9,19 +9,10 @@ namespace Cycle.Infrastructure.MsBuild;
 
 public sealed partial class ProjectResolver(
     ISolutionReader solutionReader,
-    ILogger<ProjectResolver> logger)
+    ILoggerFactory loggerFactory)
     : IProjectResolver
 {
-    private static readonly string[] RelevantItemTypes =
-    [
-        "Compile",
-        "Content",
-        "None",
-        "EmbeddedResource",
-        "ProjectReference",
-        "PackageReference",
-        "Reference",
-    ];
+    private readonly ILogger<ProjectResolver> _logger = loggerFactory.CreateLogger<ProjectResolver>();
 
     public async Task<IReadOnlyList<ProjectInfo>> ResolveAffectedProjectsAsync(
         string solutionPath,
@@ -31,26 +22,27 @@ public sealed partial class ProjectResolver(
         var solutionProjects = await solutionReader.GetProjectsAsync(solutionPath, ct);
         var projectFilePaths = solutionProjects.Select(p => p.FilePath).ToHashSet();
 
-        using var phantomFiles = new PhantomFileManager(logger);
+        using var phantomFiles = new PhantomFileManager(loggerFactory.CreateLogger<PhantomFileManager>());
         phantomFiles.CreatePhantomFiles(changedFiles, projectFilePaths);
 
         using var projectCollection = new ProjectCollection();
-        var loadedProjects = LoadProjects(solutionProjects, projectCollection);
-        var reverseMap = BuildReverseProjectMap(loadedProjects);
+        var loadedProjects = LoadProjects(solutionProjects, projectCollection, ct);
+        var reverseMap = BuildReverseProjectMap(loadedProjects, ct);
 
         var affected = new Dictionary<FilePath, ProjectInfo>();
+        var projectLookup = loadedProjects.ToDictionary(p => p.Info.FilePath, p => p.Info);
 
         // Projects that fail to load are always added to the output to prevent regression from silently passing CI.
-        foreach (var (info, _) in loadedProjects.Where(p => p.MsbProject is null))
+        foreach (var loaded in loadedProjects.Where(p => p.MsbProject is null))
         {
-            affected.TryAdd(info.FilePath, info);
+            affected.TryAdd(loaded.Info.FilePath, loaded.Info);
         }
 
         // Find directly affected projects and compute transitive closure
         foreach (var changedFile in changedFiles)
         {
             ct.ThrowIfCancellationRequested();
-            FindAffectedProjects(changedFile, loadedProjects, reverseMap, affected);
+            FindAffectedProjects(changedFile, loadedProjects, reverseMap, projectLookup, affected);
         }
 
         return affected.Values.ToList();
@@ -60,39 +52,50 @@ public sealed partial class ProjectResolver(
         FilePath changedFile,
         List<LoadedProject> loadedProjects,
         Dictionary<FilePath, HashSet<FilePath>> reverseMap,
+        Dictionary<FilePath, ProjectInfo> projectLookup,
         Dictionary<FilePath, ProjectInfo> affected)
     {
         var directlyAffected = new HashSet<FilePath>();
 
-        foreach (var (info, msbProject) in loadedProjects)
+        foreach (var loaded in loadedProjects)
         {
-            if (msbProject is null)
+            if (loaded.ResolvedItemPaths is null)
+            {
                 continue;
+            }
 
-            if (!IsFileRelevantToProject(changedFile, msbProject))
+            if (!loaded.ResolvedItemPaths.Contains(changedFile.FullPath)
+                && !loaded.ImportPaths!.Contains(changedFile.FullPath))
+            {
                 continue;
+            }
 
-            directlyAffected.Add(info.FilePath);
-            affected.TryAdd(info.FilePath, info);
+            directlyAffected.Add(loaded.Info.FilePath);
+            affected.TryAdd(loaded.Info.FilePath, loaded.Info);
         }
 
         var queue = new Queue<FilePath>(directlyAffected);
-        var projectLookup = loadedProjects.ToDictionary(p => p.Info.FilePath, p => p.Info);
 
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
 
             if (!reverseMap.TryGetValue(current, out var dependents))
+            {
                 continue;
+            }
 
             foreach (var dependent in dependents)
             {
                 if (affected.ContainsKey(dependent))
+                {
                     continue;
+                }
 
                 if (!projectLookup.TryGetValue(dependent, out var info))
+                {
                     continue;
+                }
 
                 affected.TryAdd(dependent, info);
                 queue.Enqueue(dependent);
@@ -100,25 +103,49 @@ public sealed partial class ProjectResolver(
         }
     }
 
-    private static bool IsFileRelevantToProject(FilePath filePath, MsbProject project)
+    private static HashSet<string> CollectResolvedItemPaths(MsbProject project)
     {
-        // Direct project file match
-        if (FilePathsEqual(project.FullPath, filePath.FullPath))
-            return true;
+        var paths = new HashSet<string>(FilePath.PathComparer);
+        var projectDir = Path.GetDirectoryName(project.FullPath)!;
 
-        // Import match (catches .props/.targets changes)
-        foreach (var import in project.Imports)
+        paths.Add(project.FullPath);
+
+        foreach (var item in project.AllEvaluatedItems)
         {
-            if (FilePathsEqual(import.ImportedProject.FullPath, filePath.FullPath))
-                return true;
+            var resolvedPath = Path.IsPathRooted(item.EvaluatedInclude)
+                ? Path.GetFullPath(item.EvaluatedInclude)
+                : Path.GetFullPath(Path.Combine(projectDir, item.EvaluatedInclude));
+
+            paths.Add(resolvedPath);
         }
 
-        // Item match with multi-target framework support
+        return paths;
+    }
+
+    private static HashSet<string> CollectImportPaths(MsbProject project)
+    {
+        var paths = new HashSet<string>(FilePath.PathComparer);
+
+        foreach (var import in project.Imports)
+        {
+            paths.Add(import.ImportedProject.FullPath);
+        }
+
+        return paths;
+    }
+
+    // todo: find a better solution. The current one is brittle. Furthermore, how do we deal
+    // with conditionally referenced projects. e.g. if an item is only included for net472,
+    // should only the net472 enabled project references be used. Or is this unnecessary
+    private static HashSet<string> CollectMultiTfmResolvedItemPaths(MsbProject project)
+    {
+        var paths = new HashSet<string>(FilePath.PathComparer);
+        var projectDir = Path.GetDirectoryName(project.FullPath)!;
+
+        paths.Add(project.FullPath);
+
         var targetFrameworksProp = project.GetProperty("TargetFrameworks");
         var targetFrameworkProp = project.GetProperty("TargetFramework");
-
-        if (targetFrameworksProp is null && targetFrameworkProp is null)
-            return IsFileInAnyProjectItem(filePath.FullPath, project);
 
         var frameworks = targetFrameworksProp?.EvaluatedValue
             .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -130,47 +157,64 @@ public sealed partial class ProjectResolver(
             frameworks = string.IsNullOrEmpty(singleTfm) ? [] : [singleTfm];
         }
 
-        if (targetFrameworksProp is not null)
-            project.RemoveProperty(targetFrameworksProp);
+        var originalTfmsValue = targetFrameworksProp?.EvaluatedValue;
+        var originalTfmValue = targetFrameworkProp?.EvaluatedValue;
 
-        foreach (var framework in frameworks)
+        try
         {
-            project.SetProperty("TargetFramework", framework);
-            project.ReevaluateIfNecessary();
-
-            if (IsFileInAnyProjectItem(filePath.FullPath, project))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsFileInAnyProjectItem(string filePath, MsbProject project)
-    {
-        var projectDir = Path.GetDirectoryName(project.FullPath)!;
-
-        foreach (var itemType in RelevantItemTypes)
-        {
-            foreach (var item in project.GetItems(itemType))
+            if (targetFrameworksProp is not null)
             {
-                var resolvedPath = Path.IsPathRooted(item.EvaluatedInclude)
-                    ? Path.GetFullPath(item.EvaluatedInclude)
-                    : Path.GetFullPath(Path.Combine(projectDir, item.EvaluatedInclude));
+                project.RemoveProperty(targetFrameworksProp);
+            }
 
-                if (FilePathsEqual(resolvedPath, filePath))
-                    return true;
+            foreach (var framework in frameworks)
+            {
+                project.SetProperty("TargetFramework", framework);
+                project.ReevaluateIfNecessary();
+
+                foreach (var item in project.AllEvaluatedItems)
+                {
+                    var resolvedPath = Path.IsPathRooted(item.EvaluatedInclude)
+                        ? Path.GetFullPath(item.EvaluatedInclude)
+                        : Path.GetFullPath(Path.Combine(projectDir, item.EvaluatedInclude));
+
+                    paths.Add(resolvedPath);
+                }
             }
         }
+        finally
+        {
+            if (originalTfmsValue is not null)
+            {
+                project.SetProperty("TargetFrameworks", originalTfmsValue);
+                var tfmProp = project.GetProperty("TargetFramework");
+                if (tfmProp is not null)
+                {
+                    project.RemoveProperty(tfmProp);
+                }
+            }
+            else if (originalTfmValue is not null)
+            {
+                project.SetProperty("TargetFramework", originalTfmValue);
+            }
 
-        return false;
+            project.ReevaluateIfNecessary();
+        }
+
+        return paths;
     }
 
-    private List<LoadedProject> LoadProjects(IReadOnlyList<ProjectInfo> solutionProjects, ProjectCollection projectCollection)
+    private List<LoadedProject> LoadProjects(
+        IReadOnlyList<ProjectInfo> solutionProjects,
+        ProjectCollection projectCollection,
+        CancellationToken ct)
     {
         var results = new List<LoadedProject>(solutionProjects.Count);
 
         foreach (var projectInfo in solutionProjects)
         {
+            ct.ThrowIfCancellationRequested();
+
             try
             {
                 var msbProject = MsbProject.FromFile(projectInfo.FilePath.FullPath, new ProjectOptions
@@ -178,13 +222,20 @@ public sealed partial class ProjectResolver(
                     ProjectCollection = projectCollection,
                 });
 
-                results.Add(new LoadedProject(projectInfo, msbProject));
+                var importPaths = CollectImportPaths(msbProject);
+
+                var targetFrameworksProp = msbProject.GetProperty("TargetFrameworks");
+                var resolvedItemPaths = targetFrameworksProp is not null
+                    ? CollectMultiTfmResolvedItemPaths(msbProject)
+                    : CollectResolvedItemPaths(msbProject);
+
+                results.Add(new LoadedProject(projectInfo, msbProject, resolvedItemPaths, importPaths));
 
                 LogProjectLoaded(projectInfo.FilePath.FullPath);
             }
             catch (Exception ex)
             {
-                results.Add(new LoadedProject(projectInfo, null));
+                results.Add(new LoadedProject(projectInfo, null, null, null));
                 LogProjectLoadFailed(projectInfo.FilePath.FullPath, ex);
             }
         }
@@ -192,7 +243,9 @@ public sealed partial class ProjectResolver(
         return results;
     }
 
-    private Dictionary<FilePath, HashSet<FilePath>> BuildReverseProjectMap(List<LoadedProject> loadedProjects)
+    private Dictionary<FilePath, HashSet<FilePath>> BuildReverseProjectMap(
+        List<LoadedProject> loadedProjects,
+        CancellationToken ct)
     {
         var projectsByPath = loadedProjects
             .Where(p => p.MsbProject is not null)
@@ -200,10 +253,14 @@ public sealed partial class ProjectResolver(
 
         var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
 
-        foreach (var (info, msbProject) in projectsByPath.Values)
+        foreach (var (info, msbProject, _, _) in projectsByPath.Values)
         {
+            ct.ThrowIfCancellationRequested();
+
             if (msbProject is null)
+            {
                 continue;
+            }
 
             foreach (var item in msbProject.GetItems("ProjectReference"))
             {
@@ -234,10 +291,11 @@ public sealed partial class ProjectResolver(
         return reverseMap;
     }
 
-    private static bool FilePathsEqual(string path1, string path2) =>
-        string.Equals(path1, path2, FilePath.PathComparison);
-
-    private sealed record LoadedProject(ProjectInfo Info, MsbProject? MsbProject);
+    private sealed record LoadedProject(
+        ProjectInfo Info,
+        MsbProject? MsbProject,
+        HashSet<string>? ResolvedItemPaths,
+        HashSet<string>? ImportPaths);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Loaded project {ProjectPath}")]
     private partial void LogProjectLoaded(string projectPath);

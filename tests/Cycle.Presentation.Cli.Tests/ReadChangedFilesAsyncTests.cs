@@ -1,4 +1,6 @@
-﻿namespace Cycle.Presentation.Cli.Tests;
+﻿using Microsoft.Extensions.Logging.Abstractions;
+
+namespace Cycle.Presentation.Cli.Tests;
 
 [TestFixture]
 public class ReadChangedFilesAsyncTests
@@ -16,7 +18,9 @@ public class ReadChangedFilesAsyncTests
     public void TearDown()
     {
         if (Directory.Exists(_testDir))
+        {
             Directory.Delete(_testDir, true);
+        }
     }
 
     [Test]
@@ -31,7 +35,7 @@ public class ReadChangedFilesAsyncTests
         await File.WriteAllLinesAsync(changedFilesPath, [file1, file2]);
 
         var result = await Program.ReadChangedFilesAsync(
-            new FileInfo(changedFilesPath), TextReader.Null, false, CancellationToken.None);
+            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
 
         result.Count.ShouldBe(2);
     }
@@ -46,7 +50,7 @@ public class ReadChangedFilesAsyncTests
         await File.WriteAllLinesAsync(changedFilesPath, ["", file1, "  ", "", file1]);
 
         var result = await Program.ReadChangedFilesAsync(
-            new FileInfo(changedFilesPath), TextReader.Null, false, CancellationToken.None);
+            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
 
         result.Count.ShouldBe(2);
         result.All(fp => fp.FullPath == Path.GetFullPath(file1)).ShouldBeTrue();
@@ -62,7 +66,7 @@ public class ReadChangedFilesAsyncTests
         await File.WriteAllLinesAsync(changedFilesPath, [validFile, "", "   "]);
 
         var result = await Program.ReadChangedFilesAsync(
-            new FileInfo(changedFilesPath), TextReader.Null, false, CancellationToken.None);
+            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
 
         result.Count.ShouldBe(1);
     }
@@ -75,7 +79,7 @@ public class ReadChangedFilesAsyncTests
         using var stdinReader = new StringReader(stdinContent);
 
         var result = await Program.ReadChangedFilesAsync(
-            null, stdinReader, true, CancellationToken.None);
+            null, stdinReader, true, NullLogger.Instance, CancellationToken.None);
 
         result.Count.ShouldBe(1);
         result[0].FullPath.ShouldBe(Path.GetFullPath(file1));
@@ -85,7 +89,7 @@ public class ReadChangedFilesAsyncTests
     public async Task WithNullFileAndNoRedirection_ReturnsEmpty()
     {
         var result = await Program.ReadChangedFilesAsync(
-            null, TextReader.Null, false, CancellationToken.None);
+            null, TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
 
         result.ShouldBeEmpty();
     }
@@ -97,7 +101,7 @@ public class ReadChangedFilesAsyncTests
         File.WriteAllText(changedFilesPath, "");
 
         var result = await Program.ReadChangedFilesAsync(
-            new FileInfo(changedFilesPath), TextReader.Null, false, CancellationToken.None);
+            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
 
         result.ShouldBeEmpty();
     }
@@ -114,6 +118,6 @@ public class ReadChangedFilesAsyncTests
 
         Should.ThrowAsync<OperationCanceledException>(
             () => Program.ReadChangedFilesAsync(
-                new FileInfo(changedFilesPath), TextReader.Null, false, cts.Token));
+                new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, cts.Token));
     }
 }

@@ -39,6 +39,9 @@ jobs:
       - name: Build
         run: dotnet build Cycle.slnx --no-restore -c Release
 
+      - name: Test
+        run: dotnet test --solution Cycle.slnx --no-build -c Release
+
       - name: Pack
         run: dotnet pack Cycle.slnx --no-build -c Release
 

@@ -7,6 +7,11 @@ public static partial class SolutionFilterWriter
 {
     public static async Task WriteAsync(SolutionFilter filter, TextWriter output, CancellationToken ct)
     {
+        ArgumentNullException.ThrowIfNull(filter);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(filter.SolutionPath);
+        ArgumentNullException.ThrowIfNull(filter.Projects);
+
         var dto = new SlnfRoot
         {
             Solution = new SlnfSolution
@@ -17,7 +22,7 @@ public static partial class SolutionFilterWriter
         };
 
         var json = JsonSerializer.Serialize(dto, SlnfJsonContext.Default.SlnfRoot);
-        await output.WriteLineAsync(json.AsMemory(), ct);
+        await output.WriteAsync(json.AsMemory(), ct);
     }
 
     internal sealed class SlnfRoot

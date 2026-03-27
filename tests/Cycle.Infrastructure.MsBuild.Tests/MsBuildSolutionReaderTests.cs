@@ -27,11 +27,16 @@ public class MsBuildSolutionReaderTests
     public void TearDown()
     {
         foreach (var d in _disposables)
+        {
             d.Dispose();
+        }
+
         _disposables.Clear();
 
         if (Directory.Exists(_testDir))
+        {
             Directory.Delete(_testDir, true);
+        }
     }
 
     [Test]
@@ -108,22 +113,6 @@ public class MsBuildSolutionReaderTests
         return proj;
     }
 
-    private string CreateSolution(params TempCsProj[] projects)
-    {
-        var slnPath = Path.Combine(_testDir, "Test.slnx");
-        var projectEntries = string.Join(Environment.NewLine,
-            projects.Select(p =>
-                $"    <Project Path=\"{Path.GetRelativePath(_testDir, p.ProjectFilePath)}\" />"));
-
-        var content = $"""
-                       <Solution>
-                         <Folder Name="/src/">
-                       {projectEntries}
-                         </Folder>
-                       </Solution>
-                       """;
-
-        File.WriteAllText(slnPath, content);
-        return slnPath;
-    }
+    private string CreateSolution(params TempCsProj[] projects) =>
+        TempSlnx.Create(_testDir, projects);
 }
