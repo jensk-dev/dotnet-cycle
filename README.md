@@ -56,20 +56,60 @@ cycle MySolution.slnx affected.slnf --changed-files changes.txt
 
 The examples above use `git diff --name-only A...B` (three dots). This matters when your branch has diverged from the base:
 
+```mermaid
+gitGraph
+    commit id: "A"
+    commit id: "B"
+    branch feature
+    commit id: "C"
+    commit id: "D"
+    commit id: "E"
+    checkout main
+    commit id: "F"
+    commit id: "G"
 ```
-         C---D---E  feature
-        /
-   A---B---F---G    main
+
+### Two-dot diff (`..`) — tip to tip
+
+Compares G directly against E. The diff includes changes from both sides: files changed on main (F, G) and files changed on the feature branch (C, D, E). This leads to unrelated projects in the filter.
+
+```mermaid
+gitGraph
+    commit id: "A"
+    commit id: "B"
+    branch feature
+    commit id: "C"
+    commit id: "D"
+    commit id: "E" type: HIGHLIGHT
+    checkout main
+    commit id: "F" type: REVERSE
+    commit id: "G" type: REVERSE
 ```
 
-| Syntax | What it compares | Changed files |
-|---|---|---|
-| `git diff --name-only main..feature` | G vs E (tip to tip) | Includes changes from F and G on main that the feature branch doesn't have |
-| `git diff --name-only main...feature` | B vs E (merge base to tip) | Only changes introduced on the feature branch |
+```bash
+git diff --name-only main..feature   # compares G vs E
+```
 
-The two-dot diff (`..`) compares the two endpoints directly. If main has moved forward since the branch was created, the diff includes changes from both sides, leading to unrelated projects in the filter.
+### Three-dot diff (`...`) — merge base to tip
 
-The three-dot diff (`...`) finds the common ancestor (merge base) and compares only what changed since that point. This gives you exactly the files the branch introduced, which is what you want for scoping builds.
+Finds the common ancestor (B) and compares only what changed since that point. This gives you exactly the files the feature branch introduced.
+
+```mermaid
+gitGraph
+    commit id: "A"
+    commit id: "B" type: HIGHLIGHT
+    branch feature
+    commit id: "C" type: HIGHLIGHT
+    commit id: "D" type: HIGHLIGHT
+    commit id: "E" type: HIGHLIGHT
+    checkout main
+    commit id: "F"
+    commit id: "G"
+```
+
+```bash
+git diff --name-only main...feature  # compares B vs E
+```
 
 Use three dots (`...`) for feature branches. For consecutive commits on the same branch (e.g. `HEAD~1...HEAD`), both forms are equivalent.
 
