@@ -31,12 +31,18 @@ public static partial class Program
         };
         logLevelOption.AcceptOnlyFromAmong("quiet", "minimal", "normal", "verbose");
 
+        var closureOption = new Option<bool>("--closure")
+        {
+            Description = "Include transitive build dependencies (ProjectReferences) so the filter is buildable",
+        };
+
         var rootCommand = new RootCommand("Generates a solution filter (.slnf) from a list of changed files")
         {
             solutionArg,
             outputFileArg,
             changedFilesOption,
             logLevelOption,
+            closureOption,
         };
 
         rootCommand.SetAction(async (parseResult, ct) =>
@@ -45,12 +51,14 @@ public static partial class Program
             var changedFilesFile = parseResult.GetValue(changedFilesOption);
             var outputFile = parseResult.GetValue(outputFileArg)!;
             var logLevel = parseResult.GetValue(logLevelOption) ?? "minimal";
+            var includeClosure = parseResult.GetValue(closureOption);
 
             return await RunAsync(
                 solutionFile,
                 changedFilesFile,
                 outputFile,
                 logLevel,
+                includeClosure,
                 ct);
         });
 
@@ -63,6 +71,7 @@ public static partial class Program
         FileInfo? changedFilesFile,
         FileInfo outputFile,
         string logLevel,
+        bool includeClosure,
         CancellationToken ct)
     {
         using var loggerFactory = CreateLoggerFactory(logLevel);
@@ -77,7 +86,7 @@ public static partial class Program
             var resolver = new ProjectResolver(reader, loggerFactory);
 
             var result = await resolver.ResolveAffectedProjectsAsync(
-                solutionFile.FullName, changedFiles, ct);
+                solutionFile.FullName, changedFiles, includeClosure, ct);
 
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;
             if (!Directory.Exists(outputDir))
@@ -89,6 +98,11 @@ public static partial class Program
 
             await using var writer = new StreamWriter(outputFile.FullName);
             await SolutionFilterWriter.WriteAsync(filter, writer, ct);
+
+            foreach (var unresolved in result.UnresolvedReferences)
+            {
+                LogUnresolvedReference(logger, unresolved.ReferencePath.FullPath, unresolved.ReferencedBy.FullPath);
+            }
 
             var included = result.AffectedProjects.Count;
             var filteredOut = result.TotalProjectCount - included;
@@ -183,6 +197,9 @@ public static partial class Program
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Skipping invalid path: {Path}")]
     private static partial void LogSkippingInvalidPath(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Unresolved project reference {ReferencePath} referenced by {ProjectPath}")]
+    private static partial void LogUnresolvedReference(ILogger logger, string referencePath, string projectPath);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Cycle failed")]
     private static partial void LogCycleFailed(ILogger logger, Exception ex);

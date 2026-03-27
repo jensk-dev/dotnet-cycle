@@ -3,4 +3,5 @@ namespace Cycle.Core;
 public sealed record ResolutionResult(
     IReadOnlyList<ProjectInfo> AffectedProjects,
     int TotalProjectCount,
-    int FailedProjectCount);
+    int FailedProjectCount,
+    IReadOnlyList<UnresolvedReference> UnresolvedReferences);

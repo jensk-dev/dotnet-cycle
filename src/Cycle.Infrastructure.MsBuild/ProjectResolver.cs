@@ -17,6 +17,7 @@ public sealed partial class ProjectResolver(
     public async Task<ResolutionResult> ResolveAffectedProjectsAsync(
         string solutionPath,
         IReadOnlyList<FilePath> changedFiles,
+        bool includeClosure,
         CancellationToken ct)
     {
         var solutionProjects = await solutionReader.GetProjectsAsync(solutionPath, ct);
@@ -27,7 +28,7 @@ public sealed partial class ProjectResolver(
 
         using var projectCollection = new ProjectCollection();
         var loadedProjects = LoadProjects(solutionProjects, projectCollection, ct);
-        var reverseMap = BuildReverseProjectMap(loadedProjects, ct);
+        var (reverseMap, forwardMap) = BuildDependencyMaps(loadedProjects, ct);
 
         var affected = new Dictionary<FilePath, ProjectInfo>();
         var projectLookup = loadedProjects.ToDictionary(p => p.Info.FilePath, p => p.Info);
@@ -46,7 +47,13 @@ public sealed partial class ProjectResolver(
             FindAffectedProjects(changedFile, loadedProjects, reverseMap, projectLookup, affected);
         }
 
-        return new ResolutionResult(affected.Values.ToList(), solutionProjects.Count, failedProjects.Count);
+        if (!includeClosure)
+        {
+            return new ResolutionResult(affected.Values.ToList(), solutionProjects.Count, failedProjects.Count, []);
+        }
+
+        var closure = DependencyClosureResolver.Resolve(affected, forwardMap, projectLookup);
+        return new ResolutionResult(closure.Projects, solutionProjects.Count, failedProjects.Count, closure.UnresolvedReferences);
     }
 
     private static void FindAffectedProjects(
@@ -245,15 +252,15 @@ public sealed partial class ProjectResolver(
         return results;
     }
 
-    private Dictionary<FilePath, HashSet<FilePath>> BuildReverseProjectMap(
-        List<LoadedProject> loadedProjects,
-        CancellationToken ct)
+    private (Dictionary<FilePath, HashSet<FilePath>> ReverseMap, Dictionary<FilePath, HashSet<FilePath>> ForwardMap)
+        BuildDependencyMaps(List<LoadedProject> loadedProjects, CancellationToken ct)
     {
         var projectsByPath = loadedProjects
             .Where(p => p.MsbProject is not null)
             .ToDictionary(p => p.Info.FilePath, p => p);
 
         var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var forwardMap = new Dictionary<FilePath, HashSet<FilePath>>();
 
         foreach (var (info, msbProject, _, _) in projectsByPath.Values)
         {
@@ -274,12 +281,22 @@ public sealed partial class ProjectResolver(
                     continue;
                 }
 
+                // Forward map: project → its dependencies (always recorded for closure)
+                if (!forwardMap.TryGetValue(info.FilePath, out var dependencies))
+                {
+                    dependencies = [];
+                    forwardMap[info.FilePath] = dependencies;
+                }
+
+                dependencies.Add(referencedPath.Value);
+
                 if (!projectsByPath.ContainsKey(referencedPath.Value))
                 {
                     LogProjectReferenceNotFound(referencedPath.Value.FullPath, info.FilePath.FullPath);
                     continue;
                 }
 
+                // Reverse map: dependency → dependents (only for in-solution projects)
                 if (!reverseMap.TryGetValue(referencedPath.Value, out var dependents))
                 {
                     dependents = [];
@@ -290,7 +307,7 @@ public sealed partial class ProjectResolver(
             }
         }
 
-        return reverseMap;
+        return (reverseMap, forwardMap);
     }
 
     private sealed record LoadedProject(
