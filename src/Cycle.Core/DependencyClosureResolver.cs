@@ -46,7 +46,3 @@ public static class DependencyClosureResolver
         return new ClosureResult(result.Values.ToList(), unresolved);
     }
 }
-
-public sealed record ClosureResult(
-    IReadOnlyList<ProjectInfo> Projects,
-    IReadOnlyList<UnresolvedReference> UnresolvedReferences);
