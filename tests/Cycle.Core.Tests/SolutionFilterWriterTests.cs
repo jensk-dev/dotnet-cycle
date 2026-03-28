@@ -2,24 +2,16 @@
 
 namespace Cycle.Core.Tests;
 
-[TestFixture]
-public class SolutionFilterWriterTests
+public sealed class SolutionFilterWriterTests : IDisposable
 {
-    private StringWriter _output = null!;
+    private readonly StringWriter _output = new();
 
-    [SetUp]
-    public void SetUp()
-    {
-        _output = new StringWriter();
-    }
-
-    [TearDown]
-    public void TearDown()
+    public void Dispose()
     {
         _output.Dispose();
     }
 
-    [Test]
+    [Fact]
     public async Task WriteAsync_WithProjects_WritesValidJson()
     {
         var filter = new SolutionFilter("MySolution.sln", ["src/A/A.csproj", "src/B/B.csproj"]);
@@ -31,7 +23,7 @@ public class SolutionFilterWriterTests
         doc.RootElement.ValueKind.ShouldBe(JsonValueKind.Object);
     }
 
-    [Test]
+    [Fact]
     public async Task WriteAsync_SolutionPathMatchesModel()
     {
         var filter = new SolutionFilter("MySolution.sln", ["src/A/A.csproj"]);
@@ -46,7 +38,7 @@ public class SolutionFilterWriterTests
             .ShouldBe("MySolution.sln");
     }
 
-    [Test]
+    [Fact]
     public async Task WriteAsync_ProjectPathsMatchModel()
     {
         var projects = new[] { "src/A/A.csproj", "src/B/B.fsproj" };
@@ -64,7 +56,7 @@ public class SolutionFilterWriterTests
         array[1].GetString().ShouldBe("src/B/B.fsproj");
     }
 
-    [Test]
+    [Fact]
     public async Task WriteAsync_WithEmptyProjects_WritesEmptyArray()
     {
         var filter = new SolutionFilter("MySolution.sln", []);
@@ -79,7 +71,7 @@ public class SolutionFilterWriterTests
             .ShouldBe(0);
     }
 
-    [Test]
+    [Fact]
     public async Task WriteAsync_OutputIsIndented()
     {
         var filter = new SolutionFilter("MySolution.sln", ["src/A/A.csproj"]);
@@ -90,23 +82,23 @@ public class SolutionFilterWriterTests
         json.ShouldContain(Environment.NewLine);
     }
 
-    [Test]
-    public void WriteAsync_WithNullFilter_ThrowsArgumentNullException()
+    [Fact]
+    public async Task WriteAsync_WithNullFilter_ThrowsArgumentNullException()
     {
-        Should.ThrowAsync<ArgumentNullException>(
+        await Should.ThrowAsync<ArgumentNullException>(
             () => SolutionFilterWriter.WriteAsync(null!, _output, CancellationToken.None));
     }
 
-    [Test]
-    public void WriteAsync_WithNullOutput_ThrowsArgumentNullException()
+    [Fact]
+    public async Task WriteAsync_WithNullOutput_ThrowsArgumentNullException()
     {
         var filter = new SolutionFilter("MySolution.sln", []);
 
-        Should.ThrowAsync<ArgumentNullException>(
+        await Should.ThrowAsync<ArgumentNullException>(
             () => SolutionFilterWriter.WriteAsync(filter, null!, CancellationToken.None));
     }
 
-    [Test]
+    [Fact]
     public async Task WriteAsync_HasCorrectSlnfStructure()
     {
         var filter = new SolutionFilter("MySolution.sln", ["src/A/A.csproj"]);

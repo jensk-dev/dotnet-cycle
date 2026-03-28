@@ -2,20 +2,17 @@
 
 namespace Cycle.Presentation.Cli.Tests;
 
-[TestFixture]
-public class ReadChangedFilesAsyncTests
+public sealed class ReadChangedFilesAsyncTests : IDisposable
 {
-    private string _testDir = null!;
+    private readonly string _testDir;
 
-    [SetUp]
-    public void SetUp()
+    public ReadChangedFilesAsyncTests()
     {
         _testDir = Path.Combine(Path.GetTempPath(), $"cli-test-{Guid.NewGuid():N}");
         Directory.CreateDirectory(_testDir);
     }
 
-    [TearDown]
-    public void TearDown()
+    public void Dispose()
     {
         if (Directory.Exists(_testDir))
         {
@@ -23,7 +20,7 @@ public class ReadChangedFilesAsyncTests
         }
     }
 
-    [Test]
+    [Fact]
     public async Task WithFileContainingPaths_ReturnsParsedFilePaths()
     {
         var file1 = Path.Combine(_testDir, "a.cs");
@@ -32,46 +29,46 @@ public class ReadChangedFilesAsyncTests
         File.WriteAllText(file2, "");
 
         var changedFilesPath = Path.Combine(_testDir, "changed.txt");
-        await File.WriteAllLinesAsync(changedFilesPath, [file1, file2]);
+        await File.WriteAllLinesAsync(changedFilesPath, [file1, file2], TestContext.Current.CancellationToken);
 
         var result = await Program.ReadChangedFilesAsync(
-            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
+            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, TestContext.Current.CancellationToken);
 
         result.Count.ShouldBe(2);
     }
 
-    [Test]
+    [Fact]
     public async Task WithFileContainingBlankLines_SkipsBlanks()
     {
         var file1 = Path.Combine(_testDir, "a.cs");
         File.WriteAllText(file1, "");
 
         var changedFilesPath = Path.Combine(_testDir, "changed.txt");
-        await File.WriteAllLinesAsync(changedFilesPath, ["", file1, "  ", "", file1]);
+        await File.WriteAllLinesAsync(changedFilesPath, ["", file1, "  ", "", file1], TestContext.Current.CancellationToken);
 
         var result = await Program.ReadChangedFilesAsync(
-            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
+            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, TestContext.Current.CancellationToken);
 
         result.Count.ShouldBe(2);
         result.All(fp => fp.FullPath == Path.GetFullPath(file1)).ShouldBeTrue();
     }
 
-    [Test]
+    [Fact]
     public async Task WithFileContainingInvalidPaths_SkipsInvalid()
     {
         var validFile = Path.Combine(_testDir, "valid.cs");
         File.WriteAllText(validFile, "");
 
         var changedFilesPath = Path.Combine(_testDir, "changed.txt");
-        await File.WriteAllLinesAsync(changedFilesPath, [validFile, "", "   "]);
+        await File.WriteAllLinesAsync(changedFilesPath, [validFile, "", "   "], TestContext.Current.CancellationToken);
 
         var result = await Program.ReadChangedFilesAsync(
-            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
+            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, TestContext.Current.CancellationToken);
 
         result.Count.ShouldBe(1);
     }
 
-    [Test]
+    [Fact]
     public async Task WithNullFileAndRedirectedStdin_ReadsFromStdin()
     {
         var file1 = Path.Combine(_testDir, "stdin.cs");
@@ -79,35 +76,35 @@ public class ReadChangedFilesAsyncTests
         using var stdinReader = new StringReader(stdinContent);
 
         var result = await Program.ReadChangedFilesAsync(
-            null, stdinReader, true, NullLogger.Instance, CancellationToken.None);
+            null, stdinReader, true, NullLogger.Instance, TestContext.Current.CancellationToken);
 
         result.Count.ShouldBe(1);
         result[0].FullPath.ShouldBe(Path.GetFullPath(file1));
     }
 
-    [Test]
+    [Fact]
     public async Task WithNullFileAndNoRedirection_ReturnsEmpty()
     {
         var result = await Program.ReadChangedFilesAsync(
-            null, TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
+            null, TextReader.Null, false, NullLogger.Instance, TestContext.Current.CancellationToken);
 
         result.ShouldBeEmpty();
     }
 
-    [Test]
+    [Fact]
     public async Task WithEmptyFile_ReturnsEmpty()
     {
         var changedFilesPath = Path.Combine(_testDir, "empty.txt");
         File.WriteAllText(changedFilesPath, "");
 
         var result = await Program.ReadChangedFilesAsync(
-            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, CancellationToken.None);
+            new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, TestContext.Current.CancellationToken);
 
         result.ShouldBeEmpty();
     }
 
-    [Test]
-    public void WithCancellation_ThrowsOperationCanceled()
+    [Fact]
+    public async Task WithCancellation_ThrowsOperationCanceled()
     {
         var file1 = Path.Combine(_testDir, "a.cs");
         var changedFilesPath = Path.Combine(_testDir, "changed.txt");
@@ -116,7 +113,7 @@ public class ReadChangedFilesAsyncTests
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        Should.ThrowAsync<OperationCanceledException>(
+        await Should.ThrowAsync<OperationCanceledException>(
             () => Program.ReadChangedFilesAsync(
                 new FileInfo(changedFilesPath), TextReader.Null, false, NullLogger.Instance, cts.Token));
     }

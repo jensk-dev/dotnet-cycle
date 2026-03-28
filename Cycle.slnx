@@ -8,5 +8,6 @@
     <Project Path="tests/Cycle.Core.Tests/Cycle.Core.Tests.csproj" />
     <Project Path="tests/Cycle.Infrastructure.MsBuild.Tests/Cycle.Infrastructure.MsBuild.Tests.csproj" />
     <Project Path="tests/Cycle.Presentation.Cli.Tests/Cycle.Presentation.Cli.Tests.csproj" />
+    <Project Path="tests/Cycle.Tests.Common/Cycle.Tests.Common.csproj" />
   </Folder>
 </Solution>

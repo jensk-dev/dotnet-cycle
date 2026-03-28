@@ -4,6 +4,7 @@
     <ProjectReference Include="..\..\src\Cycle.Presentation.Cli\Cycle.Presentation.Cli.csproj" />
     <ProjectReference Include="..\..\src\Cycle.Core\Cycle.Core.csproj" />
     <ProjectReference Include="..\..\src\Cycle.Infrastructure.MsBuild\Cycle.Infrastructure.MsBuild.csproj" />
+    <ProjectReference Include="..\Cycle.Tests.Common\Cycle.Tests.Common.csproj" />
   </ItemGroup>
 
 </Project>

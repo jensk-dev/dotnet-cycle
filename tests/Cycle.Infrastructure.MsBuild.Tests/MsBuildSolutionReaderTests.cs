@@ -1,30 +1,22 @@
 ﻿using Cycle.Infrastructure.MsBuild.Tests.Helpers;
+using Cycle.Tests.Common;
 
 namespace Cycle.Infrastructure.MsBuild.Tests;
 
-[TestFixture]
-public class MsBuildSolutionReaderTests
+public sealed class MsBuildSolutionReaderTests : IClassFixture<MsBuildFixture>, IDisposable
 {
-    private string _testDir = null!;
-    private MsBuildSolutionReader _reader = null!;
+    private readonly string _testDir;
+    private readonly MsBuildSolutionReader _reader;
     private readonly List<IDisposable> _disposables = [];
 
-    [OneTimeSetUp]
-    public void OneTimeSetUp()
-    {
-        MsBuildBootstrap.Initialize();
-    }
-
-    [SetUp]
-    public void SetUp()
+    public MsBuildSolutionReaderTests(MsBuildFixture _)
     {
         _testDir = Path.Combine(Path.GetTempPath(), $"slnreader-test-{Guid.NewGuid():N}");
         Directory.CreateDirectory(_testDir);
         _reader = new MsBuildSolutionReader();
     }
 
-    [TearDown]
-    public void TearDown()
+    public void Dispose()
     {
         foreach (var d in _disposables)
         {
@@ -39,35 +31,35 @@ public class MsBuildSolutionReaderTests
         }
     }
 
-    [Test]
-    public void GetProjectsAsync_WithNullPath_ThrowsArgumentException()
+    [Fact]
+    public async Task GetProjectsAsync_WithNullPath_ThrowsArgumentException()
     {
-        Should.ThrowAsync<ArgumentException>(
+        await Should.ThrowAsync<ArgumentException>(
             () => _reader.GetProjectsAsync(null!, CancellationToken.None));
     }
 
-    [Test]
-    public void GetProjectsAsync_WithEmptyPath_ThrowsArgumentException()
+    [Fact]
+    public async Task GetProjectsAsync_WithEmptyPath_ThrowsArgumentException()
     {
-        Should.ThrowAsync<ArgumentException>(
+        await Should.ThrowAsync<ArgumentException>(
             () => _reader.GetProjectsAsync("", CancellationToken.None));
     }
 
-    [Test]
-    public void GetProjectsAsync_WithWhitespacePath_ThrowsArgumentException()
+    [Fact]
+    public async Task GetProjectsAsync_WithWhitespacePath_ThrowsArgumentException()
     {
-        Should.ThrowAsync<ArgumentException>(
+        await Should.ThrowAsync<ArgumentException>(
             () => _reader.GetProjectsAsync("   ", CancellationToken.None));
     }
 
-    [Test]
-    public void GetProjectsAsync_WithUnsupportedExtension_ThrowsArgumentException()
+    [Fact]
+    public async Task GetProjectsAsync_WithUnsupportedExtension_ThrowsArgumentException()
     {
-        Should.ThrowAsync<ArgumentException>(
+        await Should.ThrowAsync<ArgumentException>(
             () => _reader.GetProjectsAsync("something.txt", CancellationToken.None));
     }
 
-    [Test]
+    [Fact]
     public async Task GetProjectsAsync_WithValidSlnx_ReturnsProjectInfos()
     {
         var projectA = CreateProject("ProjectA");
@@ -82,7 +74,7 @@ public class MsBuildSolutionReaderTests
         results.Select(r => r.Name).OrderBy(n => n).ShouldBe(["ProjectA", "ProjectB"]);
     }
 
-    [Test]
+    [Fact]
     public async Task GetProjectsAsync_WithEmptySolution_ReturnsEmptyList()
     {
         var slnPath = Path.Combine(_testDir, "Empty.slnx");
@@ -93,7 +85,7 @@ public class MsBuildSolutionReaderTests
         results.ShouldBeEmpty();
     }
 
-    [Test]
+    [Fact]
     public async Task GetProjectsAsync_ReturnsFullyQualifiedPaths()
     {
         var projectA = CreateProject("ProjectA");

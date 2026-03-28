@@ -1,9 +1,8 @@
-namespace Cycle.Core.Tests;
+﻿namespace Cycle.Core.Tests;
 
-[TestFixture]
-public class DependencyClosureResolverTests
+public sealed class DependencyClosureResolverTests
 {
-    [Test]
+    [Fact]
     public void Resolve_DirectDependency_IncludesDependency()
     {
         var a = MakeProject("A");
@@ -28,7 +27,7 @@ public class DependencyClosureResolverTests
         result.UnresolvedReferences.ShouldBeEmpty();
     }
 
-    [Test]
+    [Fact]
     public void Resolve_TransitiveChain_IncludesAllDependencies()
     {
         var a = MakeProject("A");
@@ -55,7 +54,7 @@ public class DependencyClosureResolverTests
         names.ShouldBe(["A", "B", "C"]);
     }
 
-    [Test]
+    [Fact]
     public void Resolve_SharedDependency_NoDuplicates()
     {
         var a = MakeProject("A");
@@ -86,7 +85,7 @@ public class DependencyClosureResolverTests
         names.ShouldBe(["A", "B", "Shared"]);
     }
 
-    [Test]
+    [Fact]
     public void Resolve_UnresolvedReference_TrackedInResult()
     {
         var a = MakeProject("A");
@@ -110,7 +109,7 @@ public class DependencyClosureResolverTests
         result.UnresolvedReferences[0].ReferencePath.ShouldBe(missingPath);
     }
 
-    [Test]
+    [Fact]
     public void Resolve_EmptyInput_ReturnsEmpty()
     {
         var affected = new Dictionary<FilePath, ProjectInfo>();
@@ -123,7 +122,7 @@ public class DependencyClosureResolverTests
         result.UnresolvedReferences.ShouldBeEmpty();
     }
 
-    [Test]
+    [Fact]
     public void Resolve_NoDependencies_ReturnsAffectedOnly()
     {
         var a = MakeProject("A");

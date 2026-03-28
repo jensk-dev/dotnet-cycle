@@ -1,10 +1,10 @@
-﻿using FsCheck;
+using FsCheck;
 using FsCheck.Fluent;
+using FsCheck.Xunit;
 
 namespace Cycle.Core.Tests;
 
-[TestFixture]
-public class FilePathPropertyTests
+public sealed class FilePathPropertyTests
 {
     private static Arbitrary<string> ValidFilePathStrings()
     {
@@ -14,7 +14,7 @@ public class FilePathPropertyTests
         return gen.ToArbitrary();
     }
 
-    [FsCheck.NUnit.Property]
+    [Property]
     public Property RoundTrip_FullPathIsRootedAndContainsFileName()
     {
         return Prop.ForAll(ValidFilePathStrings(), s =>
@@ -24,7 +24,7 @@ public class FilePathPropertyTests
         });
     }
 
-    [FsCheck.NUnit.Property]
+    [Property]
     public Property EqualityIsReflexive()
     {
         return Prop.ForAll(ValidFilePathStrings(), s =>
@@ -34,7 +34,7 @@ public class FilePathPropertyTests
         });
     }
 
-    [FsCheck.NUnit.Property]
+    [Property]
     public Property HashCodeConsistency_EqualValuesProduceEqualHashes()
     {
         return Prop.ForAll(ValidFilePathStrings(), s =>
@@ -45,7 +45,7 @@ public class FilePathPropertyTests
         });
     }
 
-    [FsCheck.NUnit.Property]
+    [Property]
     public Property TryFromString_ConsistentWithFromString()
     {
         return Prop.ForAll(ValidFilePathStrings(), s =>
@@ -78,7 +78,7 @@ public class FilePathPropertyTests
         return gen.ToArbitrary();
     }
 
-    [FsCheck.NUnit.Property]
+    [Property]
     public Property EqualityIsSymmetric()
     {
         return Prop.ForAll(AdversarialFilePathStrings(), s =>
@@ -89,7 +89,7 @@ public class FilePathPropertyTests
         });
     }
 
-    [FsCheck.NUnit.Property]
+    [Property]
     public Property SeparatorNormalization_ConsistentAfterFullPathResolution()
     {
         return Prop.ForAll(ValidFilePathStrings(), s =>

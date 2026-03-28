@@ -1,29 +1,21 @@
 ﻿using Cycle.Infrastructure.MsBuild.Tests.Helpers;
+using Cycle.Tests.Common;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Cycle.Infrastructure.MsBuild.Tests;
 
-[TestFixture]
-public class ProjectResolverTests
+public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDisposable
 {
-    private string _testDir = null!;
+    private readonly string _testDir;
     private readonly List<IDisposable> _disposables = [];
 
-    [OneTimeSetUp]
-    public void OneTimeSetUp()
-    {
-        MsBuildBootstrap.Initialize();
-    }
-
-    [SetUp]
-    public void SetUp()
+    public ProjectResolverTests(MsBuildFixture _)
     {
         _testDir = Path.Combine(Path.GetTempPath(), $"cycle-test-{Guid.NewGuid():N}");
         Directory.CreateDirectory(_testDir);
     }
 
-    [TearDown]
-    public void TearDown()
+    public void Dispose()
     {
         foreach (var d in _disposables)
         {
@@ -38,7 +30,7 @@ public class ProjectResolverTests
         }
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_ChangeToFileInProject_ReturnsProject()
     {
         var projectA = CreateProject("ProjectA");
@@ -55,7 +47,7 @@ public class ProjectResolverTests
         result.AffectedProjects[0].Name.ShouldBe("ProjectA");
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_ChangeToProjectFile_ReturnsProject()
     {
         var projectA = CreateProject("ProjectA");
@@ -71,7 +63,7 @@ public class ProjectResolverTests
         result.AffectedProjects[0].Name.ShouldBe("ProjectA");
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_ChangeToUnrelatedFile_ReturnsEmpty()
     {
         var projectA = CreateProject("ProjectA");
@@ -91,7 +83,7 @@ public class ProjectResolverTests
         result.AffectedProjects.Count.ShouldBe(0);
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_TransitiveDependency_ReturnsAllAffected()
     {
         // C -> B -> A: change in C affects C, B, and A
@@ -119,7 +111,7 @@ public class ProjectResolverTests
         names.ShouldBe(["ProjectA", "ProjectB", "ProjectC"]);
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_ChangeInDependency_AffectsDependents()
     {
         // B references A: change in A affects both A and B
@@ -143,7 +135,7 @@ public class ProjectResolverTests
         names.ShouldBe(["ProjectA", "ProjectB"]);
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_ContentFile_ReturnsProject()
     {
         var projectA = CreateProject("ProjectA");
@@ -160,7 +152,7 @@ public class ProjectResolverTests
         result.AffectedProjects[0].Name.ShouldBe("ProjectA");
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_EmbeddedResource_ReturnsProject()
     {
         var projectA = CreateProject("ProjectA");
@@ -176,7 +168,7 @@ public class ProjectResolverTests
         result.AffectedProjects.Count.ShouldBe(1);
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_DeletedFile_HandledViaPhantomFiles()
     {
         var projectA = CreateProject("ProjectA");
@@ -199,7 +191,7 @@ public class ProjectResolverTests
         File.Exists(filePath).ShouldBeFalse();
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_MultipleChangedFiles_ReturnsUnion()
     {
         var projectA = CreateProject("ProjectA");
@@ -226,7 +218,7 @@ public class ProjectResolverTests
         names.ShouldBe(["ProjectA", "ProjectB"]);
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_NoChangedFiles_ReturnsEmpty()
     {
         var projectA = CreateProject("ProjectA");
@@ -241,7 +233,7 @@ public class ProjectResolverTests
         result.AffectedProjects.Count.ShouldBe(0);
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_ImportFileChanged_ReturnsProject()
     {
         var projectA = CreateProject("ProjectA");
@@ -264,7 +256,7 @@ public class ProjectResolverTests
         result.AffectedProjects[0].Name.ShouldBe("ProjectA");
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_TargetsFileChanged_ReturnsProject()
     {
         var projectA = CreateProject("ProjectA");
@@ -285,7 +277,7 @@ public class ProjectResolverTests
         result.AffectedProjects[0].Name.ShouldBe("ProjectA");
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_MultiTargetFramework_FileInProject_ReturnsProject()
     {
         var projectA = CreateProject("ProjectA");
@@ -304,7 +296,7 @@ public class ProjectResolverTests
         result.AffectedProjects[0].Name.ShouldBe("ProjectA");
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_InvalidProjectLoadFailure_TreatedAsAffected()
     {
         var projectA = CreateProject("ProjectA");
@@ -321,7 +313,7 @@ public class ProjectResolverTests
         result.FailedProjectCount.ShouldBe(1);
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_InvalidProjectReference_DoesNotThrow()
     {
         var projectA = CreateProject("ProjectA");
@@ -351,7 +343,7 @@ public class ProjectResolverTests
     }
 
     // todo: is this correct? should it not resolve both items?
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_MultiTfm_MultipleChangedFiles_FindsAllCorrectly()
     {
         var projectA = CreateProject("ProjectA");
@@ -375,7 +367,7 @@ public class ProjectResolverTests
         result.AffectedProjects[0].Name.ShouldBe("ProjectA");
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_WithClosure_IncludesDirectDependency()
     {
         // A references B: change in A, with closure, should include both A and B
@@ -399,7 +391,7 @@ public class ProjectResolverTests
         names.ShouldBe(["ProjectA", "ProjectB"]);
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_WithClosure_IncludesTransitiveDependencies()
     {
         // A references B, B references C: change in A, with closure, should include A, B, C
@@ -427,7 +419,7 @@ public class ProjectResolverTests
         names.ShouldBe(["ProjectA", "ProjectB", "ProjectC"]);
     }
 
-    [Test]
+    [Fact]
     public async Task ResolveAffectedProjects_WithoutClosure_DoesNotIncludeDependencies()
     {
         // A references B: change in A, without closure, should only include A
@@ -450,8 +442,8 @@ public class ProjectResolverTests
         result.AffectedProjects[0].Name.ShouldBe("ProjectA");
     }
 
-    [Test]
-    public void ResolveAffectedProjects_WithCancelledToken_ThrowsOperationCanceled()
+    [Fact]
+    public async Task ResolveAffectedProjects_WithCancelledToken_ThrowsOperationCanceled()
     {
         var projectA = CreateProject("ProjectA");
         projectA.Create();
@@ -461,7 +453,7 @@ public class ProjectResolverTests
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        Should.ThrowAsync<OperationCanceledException>(
+        await Should.ThrowAsync<OperationCanceledException>(
             () => resolver.ResolveAffectedProjectsAsync(slnPath, [], false, cts.Token));
     }
 

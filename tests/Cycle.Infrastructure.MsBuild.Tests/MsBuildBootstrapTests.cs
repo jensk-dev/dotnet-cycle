@@ -1,9 +1,8 @@
 ﻿namespace Cycle.Infrastructure.MsBuild.Tests;
 
-[TestFixture]
-public class MsBuildBootstrapTests
+public sealed class MsBuildBootstrapTests
 {
-    [Test]
+    [Fact]
     public void Initialize_CalledTwice_DoesNotThrow()
     {
         MsBuildBootstrap.Initialize();

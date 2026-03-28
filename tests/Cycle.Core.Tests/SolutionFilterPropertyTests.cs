@@ -1,11 +1,11 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using FsCheck;
 using FsCheck.Fluent;
+using FsCheck.Xunit;
 
 namespace Cycle.Core.Tests;
 
-[TestFixture]
-public class SolutionFilterPropertyTests
+public sealed class SolutionFilterPropertyTests
 {
     private static Arbitrary<SolutionFilter> SolutionFilters()
     {
@@ -21,7 +21,7 @@ public class SolutionFilterPropertyTests
         return filterGen.ToArbitrary();
     }
 
-    [FsCheck.NUnit.Property]
+    [Property]
     public Property SolutionFilterWriter_OutputParsesAsValidJsonWithCorrectProjectCount()
     {
         return Prop.ForAll(SolutionFilters(), filter =>
@@ -39,7 +39,7 @@ public class SolutionFilterPropertyTests
         });
     }
 
-    [FsCheck.NUnit.Property]
+    [Property]
     public Property SolutionFilterWriter_SolutionPathIsPreserved()
     {
         return Prop.ForAll(SolutionFilters(), filter =>

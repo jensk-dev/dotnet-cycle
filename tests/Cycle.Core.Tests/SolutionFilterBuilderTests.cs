@@ -1,9 +1,8 @@
 ﻿namespace Cycle.Core.Tests;
 
-[TestFixture]
-public class SolutionFilterBuilderTests
+public sealed class SolutionFilterBuilderTests
 {
-    [Test]
+    [Fact]
     public void Build_SolutionInSameDir_PathIsFilename()
     {
         var solutionPath = Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln");
@@ -15,7 +14,7 @@ public class SolutionFilterBuilderTests
         result.SolutionPath.ShouldBe("MySolution.sln");
     }
 
-    [Test]
+    [Fact]
     public void Build_SlnfInSubdir_SolutionPathNavigatesUp()
     {
         var solutionPath = Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln");
@@ -28,7 +27,7 @@ public class SolutionFilterBuilderTests
         result.SolutionPath.ShouldEndWith("MySolution.sln");
     }
 
-    [Test]
+    [Fact]
     public void Build_ProjectPaths_AreRelativeToSolutionDir()
     {
         var repoDir = Path.Combine(Path.GetTempPath(), "repo");
@@ -45,7 +44,7 @@ public class SolutionFilterBuilderTests
         result.Projects[1].ShouldBe("src/B/B.fsproj");
     }
 
-    [Test]
+    [Fact]
     public void Build_WithNoProjects_ReturnsEmptyList()
     {
         var solutionPath = Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln");
@@ -56,7 +55,7 @@ public class SolutionFilterBuilderTests
         result.Projects.ShouldBeEmpty();
     }
 
-    [Test]
+    [Fact]
     public void Build_SolutionPath_IsNotEmpty()
     {
         var solutionPath = Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln");
@@ -67,7 +66,7 @@ public class SolutionFilterBuilderTests
         result.SolutionPath.ShouldNotBeNullOrWhiteSpace();
     }
 
-    [Test]
+    [Fact]
     public void Build_RelativeSolutionPath_ResolvesCorrectly()
     {
         var solutionPath = "MySolution.sln";
@@ -80,7 +79,7 @@ public class SolutionFilterBuilderTests
         result.SolutionPath.ShouldBe("MySolution.sln");
     }
 
-    [Test]
+    [Fact]
     public void Build_OutputDirDeeplyNested_SolutionPathHasMultipleParentRefs()
     {
         var repoDir = Path.Combine(Path.GetTempPath(), "repo");
@@ -93,28 +92,28 @@ public class SolutionFilterBuilderTests
         result.SolutionPath.ShouldEndWith("MySolution.sln");
     }
 
-    [Test]
+    [Fact]
     public void Build_WithNullSolutionPath_ThrowsArgumentException()
     {
         Should.Throw<ArgumentException>(
             () => SolutionFilterBuilder.Build(null!, "output", []));
     }
 
-    [Test]
+    [Fact]
     public void Build_WithNullOutputDirectory_ThrowsArgumentException()
     {
         Should.Throw<ArgumentException>(
             () => SolutionFilterBuilder.Build("sln.sln", null!, []));
     }
 
-    [Test]
+    [Fact]
     public void Build_WithNullProjects_ThrowsArgumentNullException()
     {
         Should.Throw<ArgumentNullException>(
             () => SolutionFilterBuilder.Build("sln.sln", "output", null!));
     }
 
-    [Test]
+    [Fact]
     public void Build_ProjectPaths_AreSortedAlphabetically()
     {
         var repoDir = Path.Combine(Path.GetTempPath(), "repo");
@@ -133,7 +132,7 @@ public class SolutionFilterBuilderTests
         result.Projects[2].ShouldBe("src/C/C.csproj");
     }
 
-    [Test]
+    [Fact]
     public void Build_ProjectPaths_UseForwardSlashes()
     {
         var repoDir = Path.Combine(Path.GetTempPath(), "repo");

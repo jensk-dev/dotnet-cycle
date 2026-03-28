@@ -1,28 +1,19 @@
 ﻿using System.Text.Json;
-using Cycle.Infrastructure.MsBuild;
+using Cycle.Tests.Common;
 
 namespace Cycle.Presentation.Cli.Tests;
 
-[TestFixture]
-public class ProgramEndToEndTests
+public sealed class ProgramEndToEndTests : IClassFixture<MsBuildFixture>, IDisposable
 {
-    private string _testDir = null!;
+    private readonly string _testDir;
 
-    [OneTimeSetUp]
-    public void OneTimeSetUp()
-    {
-        MsBuildBootstrap.Initialize();
-    }
-
-    [SetUp]
-    public void SetUp()
+    public ProgramEndToEndTests(MsBuildFixture _)
     {
         _testDir = Path.Combine(Path.GetTempPath(), $"e2e-test-{Guid.NewGuid():N}");
         Directory.CreateDirectory(_testDir);
     }
 
-    [TearDown]
-    public void TearDown()
+    public void Dispose()
     {
         if (Directory.Exists(_testDir))
         {
@@ -30,7 +21,7 @@ public class ProgramEndToEndTests
         }
     }
 
-    [Test]
+    [Fact]
     public async Task WithValidArgs_WritesSlnfAndReturnsZero()
     {
         var (slnPath, changedFilePath, outputPath) = SetUpProject("ClassA.cs", "class A {}");
@@ -40,13 +31,13 @@ public class ProgramEndToEndTests
         exitCode.ShouldBe(0);
         File.Exists(outputPath).ShouldBeTrue();
 
-        var json = await File.ReadAllTextAsync(outputPath);
+        var json = await File.ReadAllTextAsync(outputPath, TestContext.Current.CancellationToken);
         var doc = JsonDocument.Parse(json);
         var projects = doc.RootElement.GetProperty("solution").GetProperty("projects");
         projects.GetArrayLength().ShouldBe(1);
     }
 
-    [Test]
+    [Fact]
     public async Task WithNoChangedFiles_WritesEmptySlnf()
     {
         var projectDir = Path.Combine(_testDir, "ProjectA");
@@ -67,12 +58,12 @@ public class ProgramEndToEndTests
         var exitCode = await Program.Main([slnPath, outputPath, "--changed-files", changedFilePath]);
 
         exitCode.ShouldBe(0);
-        var json = await File.ReadAllTextAsync(outputPath);
+        var json = await File.ReadAllTextAsync(outputPath, TestContext.Current.CancellationToken);
         var doc = JsonDocument.Parse(json);
         doc.RootElement.GetProperty("solution").GetProperty("projects").GetArrayLength().ShouldBe(0);
     }
 
-    [Test]
+    [Fact]
     public async Task WithInvalidSolutionPath_ReturnsOne()
     {
         var outputPath = Path.Combine(_testDir, "output.slnf");
@@ -85,7 +76,7 @@ public class ProgramEndToEndTests
         exitCode.ShouldBe(1);
     }
 
-    [Test]
+    [Fact]
     public async Task WithVerboseLogging_Succeeds()
     {
         var (slnPath, changedFilePath, outputPath) = SetUpProject("ClassA.cs", "class A {}");

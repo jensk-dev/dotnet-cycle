@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="FsCheck.NUnit" />
+    <PackageReference Include="FsCheck.Xunit.v3" />
   </ItemGroup>
 
   <ItemGroup>

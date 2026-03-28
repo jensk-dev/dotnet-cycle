@@ -4,20 +4,17 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Cycle.Infrastructure.MsBuild.Tests;
 
-[TestFixture]
-public class PhantomFileManagerTests
+public sealed class PhantomFileManagerTests : IDisposable
 {
-    private string _testDir = null!;
+    private readonly string _testDir;
 
-    [SetUp]
-    public void SetUp()
+    public PhantomFileManagerTests()
     {
         _testDir = Path.Combine(Path.GetTempPath(), $"phantom-test-{Guid.NewGuid():N}");
         Directory.CreateDirectory(_testDir);
     }
 
-    [TearDown]
-    public void TearDown()
+    public void Dispose()
     {
         if (Directory.Exists(_testDir))
         {
@@ -25,7 +22,7 @@ public class PhantomFileManagerTests
         }
     }
 
-    [Test]
+    [Fact]
     public void CreatePhantomFiles_FileDoesNotExist_CreatesFile()
     {
         using var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
@@ -37,7 +34,7 @@ public class PhantomFileManagerTests
         File.ReadAllText(filePath.FullPath).ShouldBeEmpty();
     }
 
-    [Test]
+    [Fact]
     public void CreatePhantomFiles_FileAlreadyExists_DoesNotOverwrite()
     {
         var fullPath = Path.Combine(_testDir, "existing.cs");
@@ -50,7 +47,7 @@ public class PhantomFileManagerTests
         File.ReadAllText(fullPath).ShouldBe("original content");
     }
 
-    [Test]
+    [Fact]
     public void CreatePhantomFiles_FileIsProjectFile_SkipsCreation()
     {
         using var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
@@ -62,7 +59,7 @@ public class PhantomFileManagerTests
         File.Exists(filePath.FullPath).ShouldBeFalse();
     }
 
-    [Test]
+    [Fact]
     public void CreatePhantomFiles_DuplicateFile_CreatesOnce()
     {
         using var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
@@ -73,7 +70,7 @@ public class PhantomFileManagerTests
         File.Exists(filePath.FullPath).ShouldBeTrue();
     }
 
-    [Test]
+    [Fact]
     public void CreatePhantomFiles_DirectoryDoesNotExist_CreatesDirectory()
     {
         using var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
@@ -85,7 +82,7 @@ public class PhantomFileManagerTests
         Directory.Exists(Path.Combine(_testDir, "subdir", "deep")).ShouldBeTrue();
     }
 
-    [Test]
+    [Fact]
     public void Dispose_DeletesAllCreatedFiles()
     {
         var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
@@ -102,7 +99,7 @@ public class PhantomFileManagerTests
         File.Exists(file2.FullPath).ShouldBeFalse();
     }
 
-    [Test]
+    [Fact]
     public void Dispose_CalledTwice_IsIdempotent()
     {
         var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
@@ -114,7 +111,7 @@ public class PhantomFileManagerTests
         Should.NotThrow(() => manager.Dispose());
     }
 
-    [Test]
+    [Fact]
     public void Dispose_FileAlreadyDeleted_DoesNotThrow()
     {
         var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
@@ -126,7 +123,7 @@ public class PhantomFileManagerTests
         Should.NotThrow(() => manager.Dispose());
     }
 
-    [Test]
+    [Fact]
     public void Dispose_DeletesCreatedDirectories()
     {
         var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
@@ -142,10 +139,11 @@ public class PhantomFileManagerTests
         Directory.Exists(subDir).ShouldBeFalse();
     }
 
-    [Test]
-    [Platform(Include = "Win")]
+    [Fact]
     public void Dispose_ReadOnlyFile_LogsWarningAndContinues()
     {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows only");
+
         var manager = new PhantomFileManager(NullLoggerFactory.Instance.CreateLogger<PhantomFileManager>());
         var filePath = FilePath.FromString(Path.Combine(_testDir, "readonly.cs"));
 
@@ -158,7 +156,7 @@ public class PhantomFileManagerTests
         }
         finally
         {
-            // Clean up read-only attribute so TearDown can delete the directory
+            // Clean up read-only attribute so Dispose can delete the directory
             if (File.Exists(filePath.FullPath))
             {
                 File.SetAttributes(filePath.FullPath, FileAttributes.Normal);

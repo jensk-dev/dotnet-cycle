@@ -2,10 +2,9 @@
 
 namespace Cycle.Presentation.Cli.Tests;
 
-[TestFixture]
-public class CreateLoggerFactoryTests
+public sealed class CreateLoggerFactoryTests
 {
-    [Test]
+    [Fact]
     public void Quiet_ReturnsFactoryWithNoneLevel()
     {
         using var factory = Program.CreateLoggerFactory("quiet");
@@ -15,7 +14,7 @@ public class CreateLoggerFactoryTests
         logger.IsEnabled(LogLevel.Critical).ShouldBeFalse();
     }
 
-    [Test]
+    [Fact]
     public void Minimal_ReturnsFactoryWithWarningLevel()
     {
         using var factory = Program.CreateLoggerFactory("minimal");
@@ -25,7 +24,7 @@ public class CreateLoggerFactoryTests
         logger.IsEnabled(LogLevel.Information).ShouldBeFalse();
     }
 
-    [Test]
+    [Fact]
     public void Normal_ReturnsFactoryWithInformationLevel()
     {
         using var factory = Program.CreateLoggerFactory("normal");
@@ -35,7 +34,7 @@ public class CreateLoggerFactoryTests
         logger.IsEnabled(LogLevel.Debug).ShouldBeFalse();
     }
 
-    [Test]
+    [Fact]
     public void Verbose_ReturnsFactoryWithDebugLevel()
     {
         using var factory = Program.CreateLoggerFactory("verbose");
@@ -44,7 +43,7 @@ public class CreateLoggerFactoryTests
         logger.IsEnabled(LogLevel.Debug).ShouldBeTrue();
     }
 
-    [Test]
+    [Fact]
     public void UnknownValue_DefaultsToWarning()
     {
         using var factory = Program.CreateLoggerFactory("garbage");

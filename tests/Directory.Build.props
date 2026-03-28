@@ -5,21 +5,19 @@
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
     <NoWarn>$(NoWarn);CA1707</NoWarn>
-    <EnableNUnitRunner>true</EnableNUnitRunner>
     <OutputType>Exe</OutputType>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
 
   <ItemGroup>
-    <Using Include="NUnit.Framework" />
+    <Using Include="Xunit" />
     <Using Include="Shouldly" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="NUnit" />
-    <PackageReference Include="NUnit.Analyzers" />
-    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="NSubstitute" />
   </ItemGroup>

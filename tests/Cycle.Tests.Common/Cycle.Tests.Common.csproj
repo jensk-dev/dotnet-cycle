@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <IsTestProject>false</IsTestProject>
+    <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Remove="Microsoft.NET.Test.Sdk" />
+    <PackageReference Remove="xunit.v3" />
+    <PackageReference Remove="xunit.runner.visualstudio" />
+    <PackageReference Remove="Shouldly" />
+    <PackageReference Remove="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Remove="Xunit" />
+    <Using Remove="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Cycle.Infrastructure.MsBuild\Cycle.Infrastructure.MsBuild.csproj" />
+  </ItemGroup>
+
+</Project>
