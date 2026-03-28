@@ -9,6 +9,7 @@ namespace Cycle.Infrastructure.MsBuild;
 
 public sealed partial class ProjectResolver(
     ISolutionReader solutionReader,
+    IAffectedProjectsResolver affectedProjectResolver,
     IDependencyClosureResolver closureResolver,
     ILoggerFactory loggerFactory)
     : IProjectResolver
@@ -31,85 +32,28 @@ public sealed partial class ProjectResolver(
         var loadedProjects = LoadProjects(solutionProjects, projectCollection, ct);
         var (reverseMap, forwardMap) = BuildDependencyMaps(loadedProjects, ct);
 
-        var affected = new Dictionary<FilePath, ProjectInfo>();
-        var projectLookup = loadedProjects.ToDictionary(p => p.Info.FilePath, p => p.Info);
+        var projectData = loadedProjects
+            .Select(p => new LoadedProjectData(p.Info, p.ResolvedItemPaths, p.ImportPaths))
+            .ToList();
 
-        // Projects that fail to load are always added to the output to prevent regression from silently passing CI.
-        var failedProjects = loadedProjects.Where(p => p.MsbProject is null).ToList();
-        foreach (var loaded in failedProjects)
-        {
-            affected.TryAdd(loaded.Info.FilePath, loaded.Info);
-        }
-
-        // Find directly affected projects and compute transitive closure
-        foreach (var changedFile in changedFiles)
-        {
-            ct.ThrowIfCancellationRequested();
-            FindAffectedProjects(changedFile, loadedProjects, reverseMap, projectLookup, affected);
-        }
+        var affectedResult = affectedProjectResolver.Resolve(projectData, reverseMap, changedFiles);
 
         if (!includeClosure)
         {
-            return new ResolutionResult(affected.Values.ToList(), solutionProjects.Count, failedProjects.Count, []);
+            return new ResolutionResult(
+                affectedResult.AffectedProjects.Values.ToList(),
+                solutionProjects.Count,
+                affectedResult.FailedToLoadProjects.Count,
+                []);
         }
 
-        var closure = closureResolver.Resolve(affected, forwardMap, projectLookup);
-        return new ResolutionResult(closure.Projects, solutionProjects.Count, failedProjects.Count, closure.UnresolvedReferences);
-    }
-
-    private static void FindAffectedProjects(
-        FilePath changedFile,
-        List<LoadedProject> loadedProjects,
-        Dictionary<FilePath, HashSet<FilePath>> reverseMap,
-        Dictionary<FilePath, ProjectInfo> projectLookup,
-        Dictionary<FilePath, ProjectInfo> affected)
-    {
-        var directlyAffected = new HashSet<FilePath>();
-
-        foreach (var loaded in loadedProjects)
-        {
-            if (loaded.ResolvedItemPaths is null)
-            {
-                continue;
-            }
-
-            if (!loaded.ResolvedItemPaths.Contains(changedFile.FullPath)
-                && !loaded.ImportPaths!.Contains(changedFile.FullPath))
-            {
-                continue;
-            }
-
-            directlyAffected.Add(loaded.Info.FilePath);
-            affected.TryAdd(loaded.Info.FilePath, loaded.Info);
-        }
-
-        var queue = new Queue<FilePath>(directlyAffected);
-
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-
-            if (!reverseMap.TryGetValue(current, out var dependents))
-            {
-                continue;
-            }
-
-            foreach (var dependent in dependents)
-            {
-                if (affected.ContainsKey(dependent))
-                {
-                    continue;
-                }
-
-                if (!projectLookup.TryGetValue(dependent, out var info))
-                {
-                    continue;
-                }
-
-                affected.TryAdd(dependent, info);
-                queue.Enqueue(dependent);
-            }
-        }
+        var projectLookup = projectData.ToDictionary(p => p.Info.FilePath, p => p.Info);
+        var closure = closureResolver.Resolve(affectedResult.AffectedProjects, forwardMap, projectLookup);
+        return new ResolutionResult(
+            closure.Projects,
+            solutionProjects.Count,
+            affectedResult.FailedToLoadProjects.Count,
+            closure.UnresolvedReferences);
     }
 
     private static HashSet<string> CollectResolvedItemPaths(MsbProject project)

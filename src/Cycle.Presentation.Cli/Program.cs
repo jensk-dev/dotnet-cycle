@@ -83,8 +83,9 @@ public static partial class Program
             var changedFiles = await ReadChangedFilesAsync(changedFilesFile, Console.In, Console.IsInputRedirected, logger, ct);
 
             var reader = new MsBuildSolutionReader();
+            var affectedResolver = new AffectedProjectsResolver();
             var closureResolver = new DependencyClosureResolver();
-            var resolver = new ProjectResolver(reader, closureResolver, loggerFactory);
+            var resolver = new ProjectResolver(reader, affectedResolver, closureResolver, loggerFactory);
 
             var solutionPath = SolutionPath.FromString(solutionFile.FullName);
 

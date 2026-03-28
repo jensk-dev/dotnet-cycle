@@ -471,7 +471,8 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
     private static ProjectResolver CreateResolver()
     {
         var reader = new MsBuildSolutionReader();
+        var affectedResolver = new AffectedProjectsResolver();
         var closureResolver = new DependencyClosureResolver();
-        return new ProjectResolver(reader, closureResolver, NullLoggerFactory.Instance);
+        return new ProjectResolver(reader, affectedResolver, closureResolver, NullLoggerFactory.Instance);
     }
 }
