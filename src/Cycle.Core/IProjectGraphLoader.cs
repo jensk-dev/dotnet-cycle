@@ -2,8 +2,8 @@ namespace Cycle.Core;
 
 public interface IProjectGraphLoader
 {
-    Task<ProjectGraph> LoadAsync(
-        SolutionPath solutionPath,
+    ProjectGraph Load(
+        IReadOnlyList<ProjectInfo> projects,
         IReadOnlyList<FilePath> changedFiles,
         CancellationToken ct);
 }

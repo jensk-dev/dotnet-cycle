@@ -86,9 +86,9 @@ public static partial class Program
             var reader = new MsBuildSolutionReader();
             var affectedResolver = new AffectedProjectsResolver();
             var closureResolver = new DependencyClosureResolver();
-            var graphLoader = new MsBuildProjectGraphLoader(reader, loggerFactory);
+            var graphLoader = new MsBuildProjectGraphLoader(loggerFactory);
 
-            var useCase = new GenerateSolutionFilterUseCase(graphLoader, affectedResolver, closureResolver);
+            var useCase = new GenerateSolutionFilterUseCase(reader, graphLoader, affectedResolver, closureResolver);
 
             var solutionPath = SolutionPath.FromString(solutionFile.FullName);
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;

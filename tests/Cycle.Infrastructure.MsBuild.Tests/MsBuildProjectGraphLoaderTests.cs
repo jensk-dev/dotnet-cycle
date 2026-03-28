@@ -360,18 +360,14 @@ public sealed class MsBuildProjectGraphLoaderTests : IClassFixture<MsBuildFixtur
     }
 
     [Fact]
-    public async Task Load_WithCancelledToken_ThrowsOperationCanceled()
+    public void Load_WithCancelledToken_ThrowsOperationCanceled()
     {
-        var projectA = CreateProject("ProjectA");
-        projectA.Create();
-        var slnPath = CreateSolution(projectA);
-
         var loader = CreateLoader();
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        await Should.ThrowAsync<OperationCanceledException>(
-            () => loader.LoadAsync(slnPath, [], cts.Token));
+        Should.Throw<OperationCanceledException>(
+            () => loader.Load([], [], cts.Token));
     }
 
     private TempCsProj CreateProject(string name)
@@ -384,11 +380,8 @@ public sealed class MsBuildProjectGraphLoaderTests : IClassFixture<MsBuildFixtur
     private SolutionPath CreateSolution(params TempCsProj[] projects) =>
         SolutionPath.FromString(TempSlnx.Create(_testDir, projects));
 
-    private static MsBuildProjectGraphLoader CreateLoader()
-    {
-        var reader = new MsBuildSolutionReader();
-        return new MsBuildProjectGraphLoader(reader, NullLoggerFactory.Instance);
-    }
+    private static MsBuildProjectGraphLoader CreateLoader() =>
+        new(NullLoggerFactory.Instance);
 
     private static async Task<AffectedProjectsResult> LoadAndResolveAffectedAsync(
         SolutionPath slnPath, IReadOnlyList<Core.FilePath> changed)
@@ -400,8 +393,10 @@ public sealed class MsBuildProjectGraphLoaderTests : IClassFixture<MsBuildFixtur
     private static async Task<(ProjectGraph Graph, AffectedProjectsResult Affected)> LoadAndResolveWithGraphAsync(
         SolutionPath slnPath, IReadOnlyList<Core.FilePath> changed)
     {
+        var reader = new MsBuildSolutionReader();
+        var projects = await reader.GetProjectsAsync(slnPath, CancellationToken.None);
         var loader = CreateLoader();
-        var graph = await loader.LoadAsync(slnPath, changed, CancellationToken.None);
+        var graph = loader.Load(projects, changed, CancellationToken.None);
         var affectedResolver = new AffectedProjectsResolver();
         var affected = affectedResolver.Resolve(graph.Projects, graph.ReverseDependencyMap, changed);
         return (graph, affected);

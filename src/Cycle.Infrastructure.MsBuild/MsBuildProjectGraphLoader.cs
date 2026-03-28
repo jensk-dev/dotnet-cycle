@@ -8,25 +8,25 @@ using MsbProject = Microsoft.Build.Evaluation.Project;
 namespace Cycle.Infrastructure.MsBuild;
 
 public sealed partial class MsBuildProjectGraphLoader(
-    ISolutionReader solutionReader,
     ILoggerFactory loggerFactory)
     : IProjectGraphLoader
 {
     private readonly ILogger<MsBuildProjectGraphLoader> _logger = loggerFactory.CreateLogger<MsBuildProjectGraphLoader>();
 
-    public async Task<ProjectGraph> LoadAsync(
-        SolutionPath solutionPath,
+    public ProjectGraph Load(
+        IReadOnlyList<ProjectInfo> projects,
         IReadOnlyList<FilePath> changedFiles,
         CancellationToken ct)
     {
-        var solutionProjects = await solutionReader.GetProjectsAsync(solutionPath, ct);
-        var projectFilePaths = solutionProjects.Select(p => p.FilePath).ToHashSet();
+        ct.ThrowIfCancellationRequested();
+
+        var projectFilePaths = projects.Select(p => p.FilePath).ToHashSet();
 
         using var phantomFiles = new PhantomFileManager(loggerFactory.CreateLogger<PhantomFileManager>());
         phantomFiles.CreatePhantomFiles(changedFiles, projectFilePaths);
 
         using var projectCollection = new ProjectCollection();
-        var loadedProjects = LoadProjects(solutionProjects, projectCollection, ct);
+        var loadedProjects = LoadProjects(projects, projectCollection, ct);
         var (reverseMap, forwardMap) = BuildDependencyMaps(loadedProjects, ct);
 
         var projectData = loadedProjects

@@ -4,15 +4,18 @@ namespace Cycle.Application;
 
 public sealed class GenerateSolutionFilterUseCase
 {
+    private readonly ISolutionReader _solutionReader;
     private readonly IProjectGraphLoader _graphLoader;
     private readonly IAffectedProjectsResolver _affectedResolver;
     private readonly IDependencyClosureResolver _closureResolver;
 
     public GenerateSolutionFilterUseCase(
+        ISolutionReader solutionReader,
         IProjectGraphLoader graphLoader,
         IAffectedProjectsResolver affectedResolver,
         IDependencyClosureResolver closureResolver)
     {
+        _solutionReader = solutionReader;
         _graphLoader = graphLoader;
         _affectedResolver = affectedResolver;
         _closureResolver = closureResolver;
@@ -25,7 +28,8 @@ public sealed class GenerateSolutionFilterUseCase
         string outputDirectory,
         CancellationToken ct)
     {
-        var graph = await _graphLoader.LoadAsync(solutionPath, changedFiles, ct);
+        var projects = await _solutionReader.GetProjectsAsync(solutionPath, ct);
+        var graph = _graphLoader.Load(projects, changedFiles, ct);
 
         var affectedResult = _affectedResolver.Resolve(
             graph.Projects, graph.ReverseDependencyMap, changedFiles);
