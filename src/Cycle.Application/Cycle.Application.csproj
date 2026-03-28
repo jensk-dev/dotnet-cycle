@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Application services for the cycle affected-project resolver</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cycle.Core\Cycle.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -356,11 +356,18 @@
       "cycle": {
         "type": "Project",
         "dependencies": {
+          "Cycle.Application": "[1.0.0, )",
           "Cycle.Core": "[1.0.0, )",
           "Cycle.Infrastructure.MsBuild": "[1.0.0, )",
           "Microsoft.Extensions.Logging": "[10.0.5, )",
           "Microsoft.Extensions.Logging.Console": "[10.0.5, )",
           "System.CommandLine": "[2.0.5, )"
+        }
+      },
+      "cycle.application": {
+        "type": "Project",
+        "dependencies": {
+          "Cycle.Core": "[1.0.0, )"
         }
       },
       "cycle.core": {

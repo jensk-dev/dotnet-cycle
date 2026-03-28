@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using Cycle.Application;
 using Cycle.Core;
 using Cycle.Infrastructure.MsBuild;
 using Microsoft.Extensions.Logging;
@@ -87,33 +88,32 @@ public static partial class Program
             var closureResolver = new DependencyClosureResolver();
             var resolver = new ProjectResolver(reader, affectedResolver, closureResolver, loggerFactory);
 
+            var useCase = new GenerateSolutionFilterUseCase(resolver);
+
             var solutionPath = SolutionPath.FromString(solutionFile.FullName);
-
-            var result = await resolver.ResolveAffectedProjectsAsync(
-                solutionPath, changedFiles, includeClosure, ct);
-
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;
             if (!Directory.Exists(outputDir))
             {
                 Directory.CreateDirectory(outputDir);
             }
 
-            var filter = SolutionFilterBuilder.Build(solutionPath, outputDir, result.AffectedProjects);
+            var result = await useCase.ExecuteAsync(
+                solutionPath, changedFiles, includeClosure, outputDir, ct);
 
             await using var writer = new StreamWriter(outputFile.FullName);
             var filterWriter = new SolutionFilterWriter();
-            await filterWriter.WriteAsync(filter, writer, ct);
+            await filterWriter.WriteAsync(result.Filter, writer, ct);
 
-            foreach (var unresolved in result.UnresolvedReferences)
+            foreach (var unresolved in result.Resolution.UnresolvedReferences)
             {
                 LogUnresolvedReference(logger, unresolved.ReferencePath.FullPath, unresolved.ReferencedBy.FullPath);
             }
 
-            var included = result.AffectedProjects.Count;
-            var filteredOut = result.TotalProjectCount - included;
-            var failed = result.FailedProjectCount;
+            var included = result.Resolution.AffectedProjects.Count;
+            var filteredOut = result.Resolution.TotalProjectCount - included;
+            var failed = result.Resolution.FailedProjectCount;
             await Console.Error.WriteLineAsync(
-                $"Solution has {result.TotalProjectCount} projects, filter includes {included} ({failed} failed to load), filtered out {filteredOut}");
+                $"Solution has {result.Resolution.TotalProjectCount} projects, filter includes {included} ({failed} failed to load), filtered out {filteredOut}");
 
             return 0;
         }

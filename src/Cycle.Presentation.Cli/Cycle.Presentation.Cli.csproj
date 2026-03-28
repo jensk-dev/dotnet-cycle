@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Cycle.Application\Cycle.Application.csproj" />
     <ProjectReference Include="..\Cycle.Core\Cycle.Core.csproj" />
     <ProjectReference Include="..\Cycle.Infrastructure.MsBuild\Cycle.Infrastructure.MsBuild.csproj" />
   </ItemGroup>
