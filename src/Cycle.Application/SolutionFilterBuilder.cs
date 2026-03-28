@@ -1,4 +1,6 @@
-﻿namespace Cycle.Core;
+using Cycle.Core;
+
+namespace Cycle.Application;
 
 public static class SolutionFilterBuilder
 {

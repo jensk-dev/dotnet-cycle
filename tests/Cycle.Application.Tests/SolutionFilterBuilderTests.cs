@@ -1,4 +1,6 @@
-﻿namespace Cycle.Core.Tests;
+using Cycle.Core;
+
+namespace Cycle.Application.Tests;
 
 public sealed class SolutionFilterBuilderTests
 {

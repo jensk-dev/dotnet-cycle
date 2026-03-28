@@ -6,6 +6,7 @@
     <Project Path="src/Cycle.Presentation.Cli/Cycle.Presentation.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Cycle.Application.Tests/Cycle.Application.Tests.csproj" />
     <Project Path="tests/Cycle.Core.Tests/Cycle.Core.Tests.csproj" />
     <Project Path="tests/Cycle.Infrastructure.MsBuild.Tests/Cycle.Infrastructure.MsBuild.Tests.csproj" />
     <Project Path="tests/Cycle.Presentation.Cli.Tests/Cycle.Presentation.Cli.Tests.csproj" />
