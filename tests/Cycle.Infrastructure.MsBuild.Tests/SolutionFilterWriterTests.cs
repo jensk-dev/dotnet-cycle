@@ -1,10 +1,12 @@
-﻿using System.Text.Json;
+using System.Text.Json;
+using Cycle.Core;
 
-namespace Cycle.Core.Tests;
+namespace Cycle.Infrastructure.MsBuild.Tests;
 
 public sealed class SolutionFilterWriterTests : IDisposable
 {
     private readonly StringWriter _output = new();
+    private readonly SolutionFilterWriter _sut = new();
 
     public void Dispose()
     {
@@ -16,7 +18,7 @@ public sealed class SolutionFilterWriterTests : IDisposable
     {
         var filter = new SolutionFilter("MySolution.sln", ["src/A/A.csproj", "src/B/B.csproj"]);
 
-        await SolutionFilterWriter.WriteAsync(filter, _output, CancellationToken.None);
+        await _sut.WriteAsync(filter, _output, CancellationToken.None);
 
         var json = _output.ToString().Trim();
         var doc = JsonDocument.Parse(json);
@@ -28,7 +30,7 @@ public sealed class SolutionFilterWriterTests : IDisposable
     {
         var filter = new SolutionFilter("MySolution.sln", ["src/A/A.csproj"]);
 
-        await SolutionFilterWriter.WriteAsync(filter, _output, CancellationToken.None);
+        await _sut.WriteAsync(filter, _output, CancellationToken.None);
 
         var doc = JsonDocument.Parse(_output.ToString().Trim());
         doc.RootElement
@@ -44,7 +46,7 @@ public sealed class SolutionFilterWriterTests : IDisposable
         var projects = new[] { "src/A/A.csproj", "src/B/B.fsproj" };
         var filter = new SolutionFilter("MySolution.sln", projects);
 
-        await SolutionFilterWriter.WriteAsync(filter, _output, CancellationToken.None);
+        await _sut.WriteAsync(filter, _output, CancellationToken.None);
 
         var doc = JsonDocument.Parse(_output.ToString().Trim());
         var array = doc.RootElement
@@ -61,7 +63,7 @@ public sealed class SolutionFilterWriterTests : IDisposable
     {
         var filter = new SolutionFilter("MySolution.sln", []);
 
-        await SolutionFilterWriter.WriteAsync(filter, _output, CancellationToken.None);
+        await _sut.WriteAsync(filter, _output, CancellationToken.None);
 
         var doc = JsonDocument.Parse(_output.ToString().Trim());
         doc.RootElement
@@ -76,7 +78,7 @@ public sealed class SolutionFilterWriterTests : IDisposable
     {
         var filter = new SolutionFilter("MySolution.sln", ["src/A/A.csproj"]);
 
-        await SolutionFilterWriter.WriteAsync(filter, _output, CancellationToken.None);
+        await _sut.WriteAsync(filter, _output, CancellationToken.None);
 
         var json = _output.ToString();
         json.ShouldContain(Environment.NewLine);
@@ -86,7 +88,7 @@ public sealed class SolutionFilterWriterTests : IDisposable
     public async Task WriteAsync_WithNullFilter_ThrowsArgumentNullException()
     {
         await Should.ThrowAsync<ArgumentNullException>(
-            () => SolutionFilterWriter.WriteAsync(null!, _output, CancellationToken.None));
+            () => _sut.WriteAsync(null!, _output, CancellationToken.None));
     }
 
     [Fact]
@@ -95,7 +97,7 @@ public sealed class SolutionFilterWriterTests : IDisposable
         var filter = new SolutionFilter("MySolution.sln", []);
 
         await Should.ThrowAsync<ArgumentNullException>(
-            () => SolutionFilterWriter.WriteAsync(filter, null!, CancellationToken.None));
+            () => _sut.WriteAsync(filter, null!, CancellationToken.None));
     }
 
     [Fact]
@@ -103,7 +105,7 @@ public sealed class SolutionFilterWriterTests : IDisposable
     {
         var filter = new SolutionFilter("MySolution.sln", ["src/A/A.csproj"]);
 
-        await SolutionFilterWriter.WriteAsync(filter, _output, CancellationToken.None);
+        await _sut.WriteAsync(filter, _output, CancellationToken.None);
 
         var doc = JsonDocument.Parse(_output.ToString().Trim());
         doc.RootElement.TryGetProperty("solution", out var solution).ShouldBeTrue();

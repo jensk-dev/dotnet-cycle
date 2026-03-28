@@ -1,9 +1,10 @@
 using System.Text.Json;
+using Cycle.Core;
 using FsCheck;
 using FsCheck.Fluent;
 using FsCheck.Xunit;
 
-namespace Cycle.Core.Tests;
+namespace Cycle.Infrastructure.MsBuild.Tests;
 
 public sealed class SolutionFilterPropertyTests
 {
@@ -27,7 +28,8 @@ public sealed class SolutionFilterPropertyTests
         return Prop.ForAll(SolutionFilters(), filter =>
         {
             using var output = new StringWriter();
-            SolutionFilterWriter.WriteAsync(filter, output, CancellationToken.None).GetAwaiter().GetResult();
+            var sut = new SolutionFilterWriter();
+            sut.WriteAsync(filter, output, CancellationToken.None).GetAwaiter().GetResult();
 
             var json = output.ToString().Trim();
             var doc = JsonDocument.Parse(json);
@@ -45,7 +47,8 @@ public sealed class SolutionFilterPropertyTests
         return Prop.ForAll(SolutionFilters(), filter =>
         {
             using var output = new StringWriter();
-            SolutionFilterWriter.WriteAsync(filter, output, CancellationToken.None).GetAwaiter().GetResult();
+            var sut = new SolutionFilterWriter();
+            sut.WriteAsync(filter, output, CancellationToken.None).GetAwaiter().GetResult();
 
             var json = output.ToString().Trim();
             var doc = JsonDocument.Parse(json);

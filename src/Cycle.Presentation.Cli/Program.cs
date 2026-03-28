@@ -100,7 +100,8 @@ public static partial class Program
             var filter = SolutionFilterBuilder.Build(solutionPath, outputDir, result.AffectedProjects);
 
             await using var writer = new StreamWriter(outputFile.FullName);
-            await SolutionFilterWriter.WriteAsync(filter, writer, ct);
+            var filterWriter = new SolutionFilterWriter();
+            await filterWriter.WriteAsync(filter, writer, ct);
 
             foreach (var unresolved in result.UnresolvedReferences)
             {

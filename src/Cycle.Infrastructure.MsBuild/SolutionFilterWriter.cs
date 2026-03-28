@@ -1,11 +1,12 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using Cycle.Core;
 
-namespace Cycle.Core;
+namespace Cycle.Infrastructure.MsBuild;
 
-public static partial class SolutionFilterWriter
+public sealed partial class SolutionFilterWriter : ISolutionFilterWriter
 {
-    public static async Task WriteAsync(SolutionFilter filter, TextWriter output, CancellationToken ct)
+    public async Task WriteAsync(SolutionFilter filter, TextWriter output, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(filter);
         ArgumentNullException.ThrowIfNull(output);
