@@ -1,8 +1,8 @@
-namespace Cycle.Core;
+﻿namespace Cycle.Core;
 
-public static class DependencyClosureResolver
+public class DependencyClosureResolver : IDependencyClosureResolver
 {
-    public static ClosureResult Resolve(
+    public ClosureResult Resolve(
         IReadOnlyDictionary<FilePath, ProjectInfo> affected,
         IReadOnlyDictionary<FilePath, HashSet<FilePath>> forwardMap,
         IReadOnlyDictionary<FilePath, ProjectInfo> projectLookup)

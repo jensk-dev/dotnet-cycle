@@ -9,6 +9,7 @@ namespace Cycle.Infrastructure.MsBuild;
 
 public sealed partial class ProjectResolver(
     ISolutionReader solutionReader,
+    IDependencyClosureResolver closureResolver,
     ILoggerFactory loggerFactory)
     : IProjectResolver
 {
@@ -52,7 +53,7 @@ public sealed partial class ProjectResolver(
             return new ResolutionResult(affected.Values.ToList(), solutionProjects.Count, failedProjects.Count, []);
         }
 
-        var closure = DependencyClosureResolver.Resolve(affected, forwardMap, projectLookup);
+        var closure = closureResolver.Resolve(affected, forwardMap, projectLookup);
         return new ResolutionResult(closure.Projects, solutionProjects.Count, failedProjects.Count, closure.UnresolvedReferences);
     }
 

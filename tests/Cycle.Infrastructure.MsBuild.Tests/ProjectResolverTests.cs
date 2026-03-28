@@ -1,4 +1,5 @@
-﻿using Cycle.Infrastructure.MsBuild.Tests.Helpers;
+﻿using Cycle.Core;
+using Cycle.Infrastructure.MsBuild.Tests.Helpers;
 using Cycle.Tests.Common;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -470,6 +471,7 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
     private static ProjectResolver CreateResolver()
     {
         var reader = new MsBuildSolutionReader();
-        return new ProjectResolver(reader, NullLoggerFactory.Instance);
+        var closureResolver = new DependencyClosureResolver();
+        return new ProjectResolver(reader, closureResolver, NullLoggerFactory.Instance);
     }
 }
