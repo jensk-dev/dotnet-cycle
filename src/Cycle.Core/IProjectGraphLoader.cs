@@ -1,8 +1,8 @@
-﻿namespace Cycle.Core;
+namespace Cycle.Core;
 
-public interface IProjectResolver
+public interface IProjectGraphLoader
 {
-    Task<ResolutionResult> ResolveAffectedProjectsAsync(
+    Task<ProjectGraph> LoadAsync(
         SolutionPath solutionPath,
         IReadOnlyList<FilePath> changedFiles,
         CancellationToken ct);

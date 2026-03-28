@@ -4,14 +4,17 @@ namespace Cycle.Application;
 
 public sealed class GenerateSolutionFilterUseCase
 {
-    private readonly IProjectResolver _resolver;
+    private readonly IProjectGraphLoader _graphLoader;
+    private readonly IAffectedProjectsResolver _affectedResolver;
     private readonly IDependencyClosureResolver _closureResolver;
 
     public GenerateSolutionFilterUseCase(
-        IProjectResolver resolver,
+        IProjectGraphLoader graphLoader,
+        IAffectedProjectsResolver affectedResolver,
         IDependencyClosureResolver closureResolver)
     {
-        _resolver = resolver;
+        _graphLoader = graphLoader;
+        _affectedResolver = affectedResolver;
         _closureResolver = closureResolver;
     }
 
@@ -22,8 +25,10 @@ public sealed class GenerateSolutionFilterUseCase
         string outputDirectory,
         CancellationToken ct)
     {
-        var resolution = await _resolver.ResolveAffectedProjectsAsync(
-            solutionPath, changedFiles, ct);
+        var graph = await _graphLoader.LoadAsync(solutionPath, changedFiles, ct);
+
+        var affectedResult = _affectedResolver.Resolve(
+            graph.Projects, graph.ReverseDependencyMap, changedFiles);
 
         IReadOnlyList<ProjectInfo> includedProjects;
         IReadOnlyList<UnresolvedReference> unresolvedReferences;
@@ -31,15 +36,15 @@ public sealed class GenerateSolutionFilterUseCase
         if (includeClosure)
         {
             var closure = _closureResolver.Resolve(
-                resolution.AffectedProjects,
-                resolution.ForwardDependencyMap,
-                resolution.ProjectLookup);
+                affectedResult.AffectedProjects,
+                graph.ForwardDependencyMap,
+                graph.ProjectLookup);
             includedProjects = closure.Projects;
             unresolvedReferences = closure.UnresolvedReferences;
         }
         else
         {
-            includedProjects = resolution.AffectedProjects.Values.ToList();
+            includedProjects = affectedResult.AffectedProjects.Values.ToList();
             unresolvedReferences = [];
         }
 
@@ -49,8 +54,8 @@ public sealed class GenerateSolutionFilterUseCase
         return new GenerateSolutionFilterResult(
             filter,
             includedProjects,
-            resolution.TotalProjectCount,
-            resolution.FailedProjectCount,
+            graph.Projects.Count,
+            affectedResult.FailedToLoadProjects.Count,
             unresolvedReferences);
     }
 }

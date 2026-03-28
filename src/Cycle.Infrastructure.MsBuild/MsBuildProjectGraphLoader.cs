@@ -7,15 +7,14 @@ using MsbProject = Microsoft.Build.Evaluation.Project;
 
 namespace Cycle.Infrastructure.MsBuild;
 
-public sealed partial class ProjectResolver(
+public sealed partial class MsBuildProjectGraphLoader(
     ISolutionReader solutionReader,
-    IAffectedProjectsResolver affectedProjectResolver,
     ILoggerFactory loggerFactory)
-    : IProjectResolver
+    : IProjectGraphLoader
 {
-    private readonly ILogger<ProjectResolver> _logger = loggerFactory.CreateLogger<ProjectResolver>();
+    private readonly ILogger<MsBuildProjectGraphLoader> _logger = loggerFactory.CreateLogger<MsBuildProjectGraphLoader>();
 
-    public async Task<ResolutionResult> ResolveAffectedProjectsAsync(
+    public async Task<ProjectGraph> LoadAsync(
         SolutionPath solutionPath,
         IReadOnlyList<FilePath> changedFiles,
         CancellationToken ct)
@@ -34,16 +33,9 @@ public sealed partial class ProjectResolver(
             .Select(p => new LoadedProjectData(p.Info, p.ResolvedItemPaths, p.ImportPaths))
             .ToList();
 
-        var affectedResult = affectedProjectResolver.Resolve(projectData, reverseMap, changedFiles);
-
         var projectLookup = projectData.ToDictionary(p => p.Info.FilePath, p => p.Info);
 
-        return new ResolutionResult(
-            affectedResult.AffectedProjects,
-            solutionProjects.Count,
-            affectedResult.FailedToLoadProjects.Count,
-            forwardMap,
-            projectLookup);
+        return new ProjectGraph(projectData, forwardMap, reverseMap, projectLookup);
     }
 
     private static HashSet<string> CollectResolvedItemPaths(MsbProject project)

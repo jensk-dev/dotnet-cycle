@@ -24,9 +24,11 @@ public sealed class GenerateSolutionFilterUseCaseTests
     public async Task ExecuteAsync_WithoutClosure_ReturnsAffectedOnly()
     {
         var affected = new Dictionary<FilePath, ProjectInfo> { [ProjectAPath] = ProjectA };
-        var resolver = new StubProjectResolver(affected);
+        var graphLoader = new StubProjectGraphLoader(CreateEmptyGraph());
+        var affectedResolver = new StubAffectedProjectsResolver(
+            new AffectedProjectsResult(affected, new Dictionary<FilePath, ProjectInfo>()));
         var closureResolver = new SpyClosureResolver();
-        var useCase = new GenerateSolutionFilterUseCase(resolver, closureResolver);
+        var useCase = new GenerateSolutionFilterUseCase(graphLoader, affectedResolver, closureResolver);
 
         var result = await useCase.ExecuteAsync(
             TestSolutionPath, [], false, OutputDir, CancellationToken.None);
@@ -42,10 +44,12 @@ public sealed class GenerateSolutionFilterUseCaseTests
     {
         var affected = new Dictionary<FilePath, ProjectInfo> { [ProjectAPath] = ProjectA };
         var closureProjects = new List<ProjectInfo> { ProjectA, ProjectB };
-        var resolver = new StubProjectResolver(affected);
+        var graphLoader = new StubProjectGraphLoader(CreateEmptyGraph());
+        var affectedResolver = new StubAffectedProjectsResolver(
+            new AffectedProjectsResult(affected, new Dictionary<FilePath, ProjectInfo>()));
         var closureResolver = new SpyClosureResolver(
             new ClosureResult(closureProjects, []));
-        var useCase = new GenerateSolutionFilterUseCase(resolver, closureResolver);
+        var useCase = new GenerateSolutionFilterUseCase(graphLoader, affectedResolver, closureResolver);
 
         var result = await useCase.ExecuteAsync(
             TestSolutionPath, [], true, OutputDir, CancellationToken.None);
@@ -59,10 +63,12 @@ public sealed class GenerateSolutionFilterUseCaseTests
     {
         var affected = new Dictionary<FilePath, ProjectInfo> { [ProjectAPath] = ProjectA };
         var unresolved = new UnresolvedReference(ProjectAPath, ProjectBPath);
-        var resolver = new StubProjectResolver(affected);
+        var graphLoader = new StubProjectGraphLoader(CreateEmptyGraph());
+        var affectedResolver = new StubAffectedProjectsResolver(
+            new AffectedProjectsResult(affected, new Dictionary<FilePath, ProjectInfo>()));
         var closureResolver = new SpyClosureResolver(
             new ClosureResult([ProjectA], [unresolved]));
-        var useCase = new GenerateSolutionFilterUseCase(resolver, closureResolver);
+        var useCase = new GenerateSolutionFilterUseCase(graphLoader, affectedResolver, closureResolver);
 
         var result = await useCase.ExecuteAsync(
             TestSolutionPath, [], true, OutputDir, CancellationToken.None);
@@ -71,21 +77,31 @@ public sealed class GenerateSolutionFilterUseCaseTests
         result.UnresolvedReferences[0].ShouldBe(unresolved);
     }
 
-    private sealed class StubProjectResolver(
-        IReadOnlyDictionary<FilePath, ProjectInfo> affected) : IProjectResolver
+    private static ProjectGraph CreateEmptyGraph() =>
+        new([], new Dictionary<FilePath, HashSet<FilePath>>(),
+            new Dictionary<FilePath, HashSet<FilePath>>(),
+            new Dictionary<FilePath, ProjectInfo>());
+
+    private sealed class StubProjectGraphLoader(ProjectGraph graph) : IProjectGraphLoader
     {
-        public Task<ResolutionResult> ResolveAffectedProjectsAsync(
+        public Task<ProjectGraph> LoadAsync(
             SolutionPath solutionPath,
             IReadOnlyList<FilePath> changedFiles,
             CancellationToken ct)
         {
-            var result = new ResolutionResult(
-                affected,
-                TotalProjectCount: 5,
-                FailedProjectCount: 0,
-                ForwardDependencyMap: new Dictionary<FilePath, HashSet<FilePath>>(),
-                ProjectLookup: new Dictionary<FilePath, ProjectInfo>());
-            return Task.FromResult(result);
+            return Task.FromResult(graph);
+        }
+    }
+
+    private sealed class StubAffectedProjectsResolver(
+        AffectedProjectsResult result) : IAffectedProjectsResolver
+    {
+        public AffectedProjectsResult Resolve(
+            IReadOnlyList<LoadedProjectData> projects,
+            IReadOnlyDictionary<FilePath, HashSet<FilePath>> reverseMap,
+            IReadOnlyList<FilePath> changedFiles)
+        {
+            return result;
         }
     }
 
