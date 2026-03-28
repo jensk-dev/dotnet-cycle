@@ -3,17 +3,16 @@
 public static class SolutionFilterBuilder
 {
     public static SolutionFilter Build(
-        string solutionFilePath,
+        SolutionPath solutionFilePath,
         string outputDirectory,
         IReadOnlyList<ProjectInfo> affectedProjects)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(solutionFilePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
         ArgumentNullException.ThrowIfNull(affectedProjects);
 
-        var absoluteSolutionPath = Path.GetFullPath(solutionFilePath);
+        var absoluteSolutionPath = solutionFilePath.FilePath.FullPath;
         var absoluteOutputDir = Path.GetFullPath(outputDirectory);
-        var solutionDir = Path.GetDirectoryName(absoluteSolutionPath)!;
+        var solutionDir = solutionFilePath.FilePath.DirectoryName;
 
         var relativeSolutionPath = Path.GetRelativePath(absoluteOutputDir, absoluteSolutionPath)
             .Replace('\\', '/');

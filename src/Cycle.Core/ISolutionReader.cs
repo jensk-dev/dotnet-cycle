@@ -2,5 +2,5 @@
 
 public interface ISolutionReader
 {
-    Task<IReadOnlyList<ProjectInfo>> GetProjectsAsync(string solutionPath, CancellationToken ct);
+    Task<IReadOnlyList<ProjectInfo>> GetProjectsAsync(SolutionPath solutionPath, CancellationToken ct);
 }

@@ -86,8 +86,10 @@ public static partial class Program
             var closureResolver = new DependencyClosureResolver();
             var resolver = new ProjectResolver(reader, closureResolver, loggerFactory);
 
+            var solutionPath = SolutionPath.FromString(solutionFile.FullName);
+
             var result = await resolver.ResolveAffectedProjectsAsync(
-                solutionFile.FullName, changedFiles, includeClosure, ct);
+                solutionPath, changedFiles, includeClosure, ct);
 
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;
             if (!Directory.Exists(outputDir))
@@ -95,7 +97,7 @@ public static partial class Program
                 Directory.CreateDirectory(outputDir);
             }
 
-            var filter = SolutionFilterBuilder.Build(solutionFile.FullName, outputDir, result.AffectedProjects);
+            var filter = SolutionFilterBuilder.Build(solutionPath, outputDir, result.AffectedProjects);
 
             await using var writer = new StreamWriter(outputFile.FullName);
             await SolutionFilterWriter.WriteAsync(filter, writer, ct);

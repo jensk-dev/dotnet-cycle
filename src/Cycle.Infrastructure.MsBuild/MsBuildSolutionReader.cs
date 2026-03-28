@@ -5,15 +5,15 @@ namespace Cycle.Infrastructure.MsBuild;
 
 public class MsBuildSolutionReader : ISolutionReader
 {
-    public async Task<IReadOnlyList<ProjectInfo>> GetProjectsAsync(string solutionPath, CancellationToken ct)
+    public async Task<IReadOnlyList<ProjectInfo>> GetProjectsAsync(SolutionPath solutionPath, CancellationToken ct)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(solutionPath);
+        var solutionFullPath = solutionPath.FilePath.FullPath;
 
-        var serializer = SolutionSerializers.GetSerializerByMoniker(solutionPath)
-            ?? throw new ArgumentException($"No serializer found for '{solutionPath}'");
+        var serializer = SolutionSerializers.GetSerializerByMoniker(solutionFullPath)
+            ?? throw new ArgumentException($"No serializer found for '{solutionFullPath}'");
 
-        var solution = await serializer.OpenAsync(solutionPath, ct);
-        var solutionDir = Path.GetDirectoryName(Path.GetFullPath(solutionPath))!;
+        var solution = await serializer.OpenAsync(solutionFullPath, ct);
+        var solutionDir = solutionPath.FilePath.DirectoryName;
 
         var results = new List<ProjectInfo>();
 

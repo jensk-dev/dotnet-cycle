@@ -465,8 +465,8 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         return proj;
     }
 
-    private string CreateSolution(params TempCsProj[] projects) =>
-        TempSlnx.Create(_testDir, projects);
+    private SolutionPath CreateSolution(params TempCsProj[] projects) =>
+        SolutionPath.FromString(TempSlnx.Create(_testDir, projects));
 
     private static ProjectResolver CreateResolver()
     {

@@ -16,7 +16,7 @@ public sealed partial class ProjectResolver(
     private readonly ILogger<ProjectResolver> _logger = loggerFactory.CreateLogger<ProjectResolver>();
 
     public async Task<ResolutionResult> ResolveAffectedProjectsAsync(
-        string solutionPath,
+        SolutionPath solutionPath,
         IReadOnlyList<FilePath> changedFiles,
         bool includeClosure,
         CancellationToken ct)

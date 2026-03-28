@@ -1,4 +1,5 @@
-﻿using Cycle.Infrastructure.MsBuild.Tests.Helpers;
+﻿using Cycle.Core;
+using Cycle.Infrastructure.MsBuild.Tests.Helpers;
 using Cycle.Tests.Common;
 
 namespace Cycle.Infrastructure.MsBuild.Tests;
@@ -32,34 +33,6 @@ public sealed class MsBuildSolutionReaderTests : IClassFixture<MsBuildFixture>, 
     }
 
     [Fact]
-    public async Task GetProjectsAsync_WithNullPath_ThrowsArgumentException()
-    {
-        await Should.ThrowAsync<ArgumentException>(
-            () => _reader.GetProjectsAsync(null!, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task GetProjectsAsync_WithEmptyPath_ThrowsArgumentException()
-    {
-        await Should.ThrowAsync<ArgumentException>(
-            () => _reader.GetProjectsAsync("", CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task GetProjectsAsync_WithWhitespacePath_ThrowsArgumentException()
-    {
-        await Should.ThrowAsync<ArgumentException>(
-            () => _reader.GetProjectsAsync("   ", CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task GetProjectsAsync_WithUnsupportedExtension_ThrowsArgumentException()
-    {
-        await Should.ThrowAsync<ArgumentException>(
-            () => _reader.GetProjectsAsync("something.txt", CancellationToken.None));
-    }
-
-    [Fact]
     public async Task GetProjectsAsync_WithValidSlnx_ReturnsProjectInfos()
     {
         var projectA = CreateProject("ProjectA");
@@ -68,7 +41,7 @@ public sealed class MsBuildSolutionReaderTests : IClassFixture<MsBuildFixture>, 
         projectB.Create();
         var slnPath = CreateSolution(projectA, projectB);
 
-        var results = await _reader.GetProjectsAsync(slnPath, CancellationToken.None);
+        var results = await _reader.GetProjectsAsync(SolutionPath.FromString(slnPath), CancellationToken.None);
 
         results.Count.ShouldBe(2);
         results.Select(r => r.Name).OrderBy(n => n).ShouldBe(["ProjectA", "ProjectB"]);
@@ -80,7 +53,7 @@ public sealed class MsBuildSolutionReaderTests : IClassFixture<MsBuildFixture>, 
         var slnPath = Path.Combine(_testDir, "Empty.slnx");
         File.WriteAllText(slnPath, "<Solution></Solution>");
 
-        var results = await _reader.GetProjectsAsync(slnPath, CancellationToken.None);
+        var results = await _reader.GetProjectsAsync(SolutionPath.FromString(slnPath), CancellationToken.None);
 
         results.ShouldBeEmpty();
     }
@@ -92,7 +65,7 @@ public sealed class MsBuildSolutionReaderTests : IClassFixture<MsBuildFixture>, 
         projectA.Create();
         var slnPath = CreateSolution(projectA);
 
-        var results = await _reader.GetProjectsAsync(slnPath, CancellationToken.None);
+        var results = await _reader.GetProjectsAsync(SolutionPath.FromString(slnPath), CancellationToken.None);
 
         results.Count.ShouldBe(1);
         Path.IsPathRooted(results[0].FilePath.FullPath).ShouldBeTrue();

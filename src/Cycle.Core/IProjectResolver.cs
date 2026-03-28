@@ -3,7 +3,7 @@
 public interface IProjectResolver
 {
     Task<ResolutionResult> ResolveAffectedProjectsAsync(
-        string solutionPath,
+        SolutionPath solutionPath,
         IReadOnlyList<FilePath> changedFiles,
         bool includeClosure,
         CancellationToken ct);

@@ -5,7 +5,7 @@ public sealed class SolutionFilterBuilderTests
     [Fact]
     public void Build_SolutionInSameDir_PathIsFilename()
     {
-        var solutionPath = Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln");
+        var solutionPath = SolutionPath.FromString(Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln"));
         var outputDir = Path.Combine(Path.GetTempPath(), "repo");
         var projects = CreateProjects(Path.Combine(Path.GetTempPath(), "repo", "src", "A", "A.csproj"));
 
@@ -17,7 +17,7 @@ public sealed class SolutionFilterBuilderTests
     [Fact]
     public void Build_SlnfInSubdir_SolutionPathNavigatesUp()
     {
-        var solutionPath = Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln");
+        var solutionPath = SolutionPath.FromString(Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln"));
         var outputDir = Path.Combine(Path.GetTempPath(), "repo", "output");
         var projects = CreateProjects(Path.Combine(Path.GetTempPath(), "repo", "src", "A", "A.csproj"));
 
@@ -31,7 +31,7 @@ public sealed class SolutionFilterBuilderTests
     public void Build_ProjectPaths_AreRelativeToSolutionDir()
     {
         var repoDir = Path.Combine(Path.GetTempPath(), "repo");
-        var solutionPath = Path.Combine(repoDir, "MySolution.sln");
+        var solutionPath = SolutionPath.FromString(Path.Combine(repoDir, "MySolution.sln"));
         var outputDir = repoDir;
         var projects = CreateProjects(
             Path.Combine(repoDir, "src", "A", "A.csproj"),
@@ -47,7 +47,7 @@ public sealed class SolutionFilterBuilderTests
     [Fact]
     public void Build_WithNoProjects_ReturnsEmptyList()
     {
-        var solutionPath = Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln");
+        var solutionPath = SolutionPath.FromString(Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln"));
         var outputDir = Path.Combine(Path.GetTempPath(), "repo");
 
         var result = SolutionFilterBuilder.Build(solutionPath, outputDir, []);
@@ -58,7 +58,7 @@ public sealed class SolutionFilterBuilderTests
     [Fact]
     public void Build_SolutionPath_IsNotEmpty()
     {
-        var solutionPath = Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln");
+        var solutionPath = SolutionPath.FromString(Path.Combine(Path.GetTempPath(), "repo", "MySolution.sln"));
         var outputDir = Path.Combine(Path.GetTempPath(), "repo");
 
         var result = SolutionFilterBuilder.Build(solutionPath, outputDir, []);
@@ -69,7 +69,7 @@ public sealed class SolutionFilterBuilderTests
     [Fact]
     public void Build_RelativeSolutionPath_ResolvesCorrectly()
     {
-        var solutionPath = "MySolution.sln";
+        var solutionPath = SolutionPath.FromString("MySolution.sln");
         var outputDir = Directory.GetCurrentDirectory();
         var projects = CreateProjects(
             Path.Combine(Directory.GetCurrentDirectory(), "src", "A", "A.csproj"));
@@ -83,7 +83,7 @@ public sealed class SolutionFilterBuilderTests
     public void Build_OutputDirDeeplyNested_SolutionPathHasMultipleParentRefs()
     {
         var repoDir = Path.Combine(Path.GetTempPath(), "repo");
-        var solutionPath = Path.Combine(repoDir, "MySolution.sln");
+        var solutionPath = SolutionPath.FromString(Path.Combine(repoDir, "MySolution.sln"));
         var outputDir = Path.Combine(repoDir, "a", "b", "c", "d");
 
         var result = SolutionFilterBuilder.Build(solutionPath, outputDir, []);
@@ -93,31 +93,28 @@ public sealed class SolutionFilterBuilderTests
     }
 
     [Fact]
-    public void Build_WithNullSolutionPath_ThrowsArgumentException()
-    {
-        Should.Throw<ArgumentException>(
-            () => SolutionFilterBuilder.Build(null!, "output", []));
-    }
-
-    [Fact]
     public void Build_WithNullOutputDirectory_ThrowsArgumentException()
     {
+        var solutionPath = SolutionPath.FromString(Path.Combine(Path.GetTempPath(), "test.sln"));
+
         Should.Throw<ArgumentException>(
-            () => SolutionFilterBuilder.Build("sln.sln", null!, []));
+            () => SolutionFilterBuilder.Build(solutionPath, null!, []));
     }
 
     [Fact]
     public void Build_WithNullProjects_ThrowsArgumentNullException()
     {
+        var solutionPath = SolutionPath.FromString(Path.Combine(Path.GetTempPath(), "test.sln"));
+
         Should.Throw<ArgumentNullException>(
-            () => SolutionFilterBuilder.Build("sln.sln", "output", null!));
+            () => SolutionFilterBuilder.Build(solutionPath, "output", null!));
     }
 
     [Fact]
     public void Build_ProjectPaths_AreSortedAlphabetically()
     {
         var repoDir = Path.Combine(Path.GetTempPath(), "repo");
-        var solutionPath = Path.Combine(repoDir, "MySolution.sln");
+        var solutionPath = SolutionPath.FromString(Path.Combine(repoDir, "MySolution.sln"));
         var outputDir = repoDir;
         var projects = CreateProjects(
             Path.Combine(repoDir, "src", "C", "C.csproj"),
@@ -136,7 +133,7 @@ public sealed class SolutionFilterBuilderTests
     public void Build_ProjectPaths_UseForwardSlashes()
     {
         var repoDir = Path.Combine(Path.GetTempPath(), "repo");
-        var solutionPath = Path.Combine(repoDir, "MySolution.sln");
+        var solutionPath = SolutionPath.FromString(Path.Combine(repoDir, "MySolution.sln"));
         var projects = CreateProjects(Path.Combine(repoDir, "src", "A", "A.csproj"));
 
         var result = SolutionFilterBuilder.Build(solutionPath, repoDir, projects);
