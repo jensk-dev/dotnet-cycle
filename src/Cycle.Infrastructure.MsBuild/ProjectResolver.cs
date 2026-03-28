@@ -10,7 +10,6 @@ namespace Cycle.Infrastructure.MsBuild;
 public sealed partial class ProjectResolver(
     ISolutionReader solutionReader,
     IAffectedProjectsResolver affectedProjectResolver,
-    IDependencyClosureResolver closureResolver,
     ILoggerFactory loggerFactory)
     : IProjectResolver
 {
@@ -19,7 +18,6 @@ public sealed partial class ProjectResolver(
     public async Task<ResolutionResult> ResolveAffectedProjectsAsync(
         SolutionPath solutionPath,
         IReadOnlyList<FilePath> changedFiles,
-        bool includeClosure,
         CancellationToken ct)
     {
         var solutionProjects = await solutionReader.GetProjectsAsync(solutionPath, ct);
@@ -38,22 +36,14 @@ public sealed partial class ProjectResolver(
 
         var affectedResult = affectedProjectResolver.Resolve(projectData, reverseMap, changedFiles);
 
-        if (!includeClosure)
-        {
-            return new ResolutionResult(
-                affectedResult.AffectedProjects.Values.ToList(),
-                solutionProjects.Count,
-                affectedResult.FailedToLoadProjects.Count,
-                []);
-        }
-
         var projectLookup = projectData.ToDictionary(p => p.Info.FilePath, p => p.Info);
-        var closure = closureResolver.Resolve(affectedResult.AffectedProjects, forwardMap, projectLookup);
+
         return new ResolutionResult(
-            closure.Projects,
+            affectedResult.AffectedProjects,
             solutionProjects.Count,
             affectedResult.FailedToLoadProjects.Count,
-            closure.UnresolvedReferences);
+            forwardMap,
+            projectLookup);
     }
 
     private static HashSet<string> CollectResolvedItemPaths(MsbProject project)

@@ -1,7 +1,8 @@
 namespace Cycle.Core;
 
 public sealed record ResolutionResult(
-    IReadOnlyList<ProjectInfo> AffectedProjects,
+    IReadOnlyDictionary<FilePath, ProjectInfo> AffectedProjects,
     int TotalProjectCount,
     int FailedProjectCount,
-    IReadOnlyList<UnresolvedReference> UnresolvedReferences);
+    IReadOnlyDictionary<FilePath, HashSet<FilePath>> ForwardDependencyMap,
+    IReadOnlyDictionary<FilePath, ProjectInfo> ProjectLookup);

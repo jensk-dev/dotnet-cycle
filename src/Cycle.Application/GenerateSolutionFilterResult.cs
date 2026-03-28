@@ -4,4 +4,7 @@ namespace Cycle.Application;
 
 public sealed record GenerateSolutionFilterResult(
     SolutionFilter Filter,
-    ResolutionResult Resolution);
+    IReadOnlyList<ProjectInfo> IncludedProjects,
+    int TotalProjectCount,
+    int FailedProjectCount,
+    IReadOnlyList<UnresolvedReference> UnresolvedReferences);

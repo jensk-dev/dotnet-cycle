@@ -42,10 +42,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
     }
 
     [Fact]
@@ -58,10 +58,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(projectA.ProjectFilePath) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(unrelatedFile) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(0);
     }
@@ -105,10 +105,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(fileInC) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(3);
-        var names = result.AffectedProjects.Select(p => p.Name).OrderBy(n => n).ToList();
+        var names = result.AffectedProjects.Values.Select(p => p.Name).OrderBy(n => n).ToList();
         names.ShouldBe(["ProjectA", "ProjectB", "ProjectC"]);
     }
 
@@ -129,10 +129,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(fileInA) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(2);
-        var names = result.AffectedProjects.Select(p => p.Name).OrderBy(n => n).ToList();
+        var names = result.AffectedProjects.Values.Select(p => p.Name).OrderBy(n => n).ToList();
         names.ShouldBe(["ProjectA", "ProjectB"]);
     }
 
@@ -147,10 +147,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
     }
 
     [Fact]
@@ -164,7 +164,7 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
     }
@@ -183,10 +183,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
 
         // Phantom file should be cleaned up
         File.Exists(filePath).ShouldBeFalse();
@@ -212,10 +212,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
             Core.FilePath.FromString(fileB),
         };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(2);
-        var names = result.AffectedProjects.Select(p => p.Name).OrderBy(n => n).ToList();
+        var names = result.AffectedProjects.Values.Select(p => p.Name).OrderBy(n => n).ToList();
         names.ShouldBe(["ProjectA", "ProjectB"]);
     }
 
@@ -229,7 +229,7 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
 
         var resolver = CreateResolver();
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, [], false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, [], CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(0);
     }
@@ -251,10 +251,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(propsPath) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
     }
 
     [Fact]
@@ -272,10 +272,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(targetsPath) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
     }
 
     [Fact]
@@ -291,10 +291,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(filePath) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
     }
 
     [Fact]
@@ -306,11 +306,11 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var slnPath = CreateSolution(projectA);
 
         var resolver = CreateResolver();
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, [], false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, [], CancellationToken.None);
 
         // Projects that fail to load are always included
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
         result.FailedProjectCount.ShouldBe(1);
     }
 
@@ -338,9 +338,9 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var changed = new[] { Core.FilePath.FromString(fileInA) };
 
         // Should not throw, and should still find ProjectA as affected
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
     }
 
     // todo: is this correct? should it not resolve both items?
@@ -362,66 +362,14 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
             Core.FilePath.FromString(fileB),
         };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
     }
 
     [Fact]
-    public async Task ResolveAffectedProjects_WithClosure_IncludesDirectDependency()
-    {
-        // A references B: change in A, with closure, should include both A and B
-        var projectB = CreateProject("ProjectB");
-        projectB.Create();
-
-        var projectA = CreateProject("ProjectA");
-        projectA.Create();
-        projectA.AddProjectReference(projectB);
-        var (fileInA, _) = projectA.AddFileToProject("ClassA.cs", ProjectItemType.Compile, false, "class A {}");
-
-        var slnPath = CreateSolution(projectA, projectB);
-
-        var resolver = CreateResolver();
-        var changed = new[] { Core.FilePath.FromString(fileInA) };
-
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, true, CancellationToken.None);
-
-        result.AffectedProjects.Count.ShouldBe(2);
-        var names = result.AffectedProjects.Select(p => p.Name).OrderBy(n => n).ToList();
-        names.ShouldBe(["ProjectA", "ProjectB"]);
-    }
-
-    [Fact]
-    public async Task ResolveAffectedProjects_WithClosure_IncludesTransitiveDependencies()
-    {
-        // A references B, B references C: change in A, with closure, should include A, B, C
-        var projectC = CreateProject("ProjectC");
-        projectC.Create();
-
-        var projectB = CreateProject("ProjectB");
-        projectB.Create();
-        projectB.AddProjectReference(projectC);
-
-        var projectA = CreateProject("ProjectA");
-        projectA.Create();
-        projectA.AddProjectReference(projectB);
-        var (fileInA, _) = projectA.AddFileToProject("ClassA.cs", ProjectItemType.Compile, false, "class A {}");
-
-        var slnPath = CreateSolution(projectA, projectB, projectC);
-
-        var resolver = CreateResolver();
-        var changed = new[] { Core.FilePath.FromString(fileInA) };
-
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, true, CancellationToken.None);
-
-        result.AffectedProjects.Count.ShouldBe(3);
-        var names = result.AffectedProjects.Select(p => p.Name).OrderBy(n => n).ToList();
-        names.ShouldBe(["ProjectA", "ProjectB", "ProjectC"]);
-    }
-
-    [Fact]
-    public async Task ResolveAffectedProjects_WithoutClosure_DoesNotIncludeDependencies()
+    public async Task ResolveAffectedProjects_DoesNotIncludeForwardDependencies()
     {
         // A references B: change in A, without closure, should only include A
         var projectB = CreateProject("ProjectB");
@@ -437,10 +385,10 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         var resolver = CreateResolver();
         var changed = new[] { Core.FilePath.FromString(fileInA) };
 
-        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, false, CancellationToken.None);
+        var result = await resolver.ResolveAffectedProjectsAsync(slnPath, changed, CancellationToken.None);
 
         result.AffectedProjects.Count.ShouldBe(1);
-        result.AffectedProjects[0].Name.ShouldBe("ProjectA");
+        result.AffectedProjects.Values.Single().Name.ShouldBe("ProjectA");
     }
 
     [Fact]
@@ -455,7 +403,7 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
         cts.Cancel();
 
         await Should.ThrowAsync<OperationCanceledException>(
-            () => resolver.ResolveAffectedProjectsAsync(slnPath, [], false, cts.Token));
+            () => resolver.ResolveAffectedProjectsAsync(slnPath, [], cts.Token));
     }
 
     private TempCsProj CreateProject(string name)
@@ -472,7 +420,6 @@ public sealed class ProjectResolverTests : IClassFixture<MsBuildFixture>, IDispo
     {
         var reader = new MsBuildSolutionReader();
         var affectedResolver = new AffectedProjectsResolver();
-        var closureResolver = new DependencyClosureResolver();
-        return new ProjectResolver(reader, affectedResolver, closureResolver, NullLoggerFactory.Instance);
+        return new ProjectResolver(reader, affectedResolver, NullLoggerFactory.Instance);
     }
 }

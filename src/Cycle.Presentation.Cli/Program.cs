@@ -86,9 +86,9 @@ public static partial class Program
             var reader = new MsBuildSolutionReader();
             var affectedResolver = new AffectedProjectsResolver();
             var closureResolver = new DependencyClosureResolver();
-            var resolver = new ProjectResolver(reader, affectedResolver, closureResolver, loggerFactory);
+            var resolver = new ProjectResolver(reader, affectedResolver, loggerFactory);
 
-            var useCase = new GenerateSolutionFilterUseCase(resolver);
+            var useCase = new GenerateSolutionFilterUseCase(resolver, closureResolver);
 
             var solutionPath = SolutionPath.FromString(solutionFile.FullName);
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;
@@ -104,16 +104,16 @@ public static partial class Program
             var filterWriter = new SolutionFilterWriter();
             await filterWriter.WriteAsync(result.Filter, writer, ct);
 
-            foreach (var unresolved in result.Resolution.UnresolvedReferences)
+            foreach (var unresolved in result.UnresolvedReferences)
             {
                 LogUnresolvedReference(logger, unresolved.ReferencePath.FullPath, unresolved.ReferencedBy.FullPath);
             }
 
-            var included = result.Resolution.AffectedProjects.Count;
-            var filteredOut = result.Resolution.TotalProjectCount - included;
-            var failed = result.Resolution.FailedProjectCount;
+            var included = result.IncludedProjects.Count;
+            var filteredOut = result.TotalProjectCount - included;
+            var failed = result.FailedProjectCount;
             await Console.Error.WriteLineAsync(
-                $"Solution has {result.Resolution.TotalProjectCount} projects, filter includes {included} ({failed} failed to load), filtered out {filteredOut}");
+                $"Solution has {result.TotalProjectCount} projects, filter includes {included} ({failed} failed to load), filtered out {filteredOut}");
 
             return 0;
         }
