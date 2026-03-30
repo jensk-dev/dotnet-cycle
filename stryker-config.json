@@ -8,8 +8,8 @@
       "break": 80
     },
     "mutate": [
-      "src/**/*.cs",
-      "!src/**/*.g.cs"
+      "**/*.cs",
+      "!**/*.g.cs"
     ],
     "ignore-mutations": [
       "string",
