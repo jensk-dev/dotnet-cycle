@@ -18,7 +18,7 @@ public sealed class AffectedProjectsResolver : IAffectedProjectsResolver
         var failedToLoad = new Dictionary<FilePath, ProjectInfo>();
         foreach (var project in projects)
         {
-            if (project.ResolvedItemPaths is null)
+            if (project.FailedToLoad)
             {
                 affected.TryAdd(project.Info.FilePath, project.Info);
                 failedToLoad.TryAdd(project.Info.FilePath, project.Info);
@@ -44,13 +44,7 @@ public sealed class AffectedProjectsResolver : IAffectedProjectsResolver
 
         foreach (var loaded in projects)
         {
-            if (loaded.ResolvedItemPaths is null)
-            {
-                continue;
-            }
-
-            if (!loaded.ResolvedItemPaths.Contains(changedFile.FullPath)
-                && !loaded.ImportPaths!.Contains(changedFile.FullPath))
+            if (loaded.FailedToLoad || !loaded.ContainsFile(changedFile))
             {
                 continue;
             }

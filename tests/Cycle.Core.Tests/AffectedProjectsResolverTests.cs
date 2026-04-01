@@ -9,7 +9,7 @@ public sealed class AffectedProjectsResolverTests
     {
         var a = MakeProject("A");
         var changedFile = FilePath.FromString(Path.Combine(Path.GetTempPath(), "A", "File.cs"));
-        var projects = new[] { MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath.FullPath, changedFile.FullPath)) };
+        var projects = new[] { MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath, changedFile)) };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
         var result = _sut.Resolve(projects, reverseMap, [changedFile]);
@@ -59,7 +59,7 @@ public sealed class AffectedProjectsResolverTests
         {
             MakeLoadedProject(a),
             MakeLoadedProject(b),
-            MakeLoadedProject(c, itemPaths: MakePathSet(c.FilePath.FullPath, changedFile.FullPath)),
+            MakeLoadedProject(c, itemPaths: MakePathSet(c.FilePath, changedFile)),
         };
 
         // B depends on C, A depends on B
@@ -84,7 +84,7 @@ public sealed class AffectedProjectsResolverTests
         var propsFile = FilePath.FromString(Path.Combine(Path.GetTempPath(), "Directory.Build.props"));
         var projects = new[]
         {
-            MakeLoadedProject(a, importPaths: MakePathSet(propsFile.FullPath)),
+            MakeLoadedProject(a, importPaths: MakePathSet(propsFile)),
         };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
@@ -104,8 +104,8 @@ public sealed class AffectedProjectsResolverTests
 
         var projects = new[]
         {
-            MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath.FullPath, fileA.FullPath)),
-            MakeLoadedProject(b, itemPaths: MakePathSet(b.FilePath.FullPath, fileB.FullPath)),
+            MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath, fileA)),
+            MakeLoadedProject(b, itemPaths: MakePathSet(b.FilePath, fileB)),
         };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
@@ -140,8 +140,8 @@ public sealed class AffectedProjectsResolverTests
 
         var projects = new[]
         {
-            MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath.FullPath, fileA.FullPath)),
-            MakeLoadedProject(b, itemPaths: MakePathSet(b.FilePath.FullPath, fileB.FullPath)),
+            MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath, fileA)),
+            MakeLoadedProject(b, itemPaths: MakePathSet(b.FilePath, fileB)),
             MakeLoadedProject(shared),
         };
 
@@ -192,7 +192,7 @@ public sealed class AffectedProjectsResolverTests
 
         var projects = new[]
         {
-            MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath.FullPath, changedFile.FullPath)),
+            MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath, changedFile)),
         };
 
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
@@ -233,28 +233,23 @@ public sealed class AffectedProjectsResolverTests
         return new ProjectInfo(name, FilePath.FromString(path));
     }
 
-    private static HashSet<string> MakePathSet(params string[] paths)
+    private static HashSet<FilePath> MakePathSet(params FilePath[] paths)
     {
-        var set = new HashSet<string>(FilePath.PathComparer);
-        foreach (var p in paths)
-        {
-            set.Add(p);
-        }
-        return set;
+        return [..paths];
     }
 
     private static LoadedProjectData MakeLoadedProject(
         ProjectInfo info,
-        HashSet<string>? itemPaths = null,
-        HashSet<string>? importPaths = null)
+        HashSet<FilePath>? itemPaths = null,
+        HashSet<FilePath>? importPaths = null)
     {
-        itemPaths ??= new HashSet<string>(FilePath.PathComparer) { info.FilePath.FullPath };
-        importPaths ??= new HashSet<string>(FilePath.PathComparer);
-        return new LoadedProjectData(info, itemPaths, importPaths);
+        itemPaths ??= [info.FilePath];
+        importPaths ??= [];
+        return LoadedProjectData.Loaded(info, itemPaths, importPaths);
     }
 
     private static LoadedProjectData MakeFailedProject(ProjectInfo info)
     {
-        return new LoadedProjectData(info, null, null);
+        return LoadedProjectData.Failed(info);
     }
 }

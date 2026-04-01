@@ -30,7 +30,9 @@ public sealed partial class MsBuildProjectGraphLoader(
         var (reverseMap, forwardMap) = BuildDependencyMaps(loadedProjects, ct);
 
         var projectData = loadedProjects
-            .Select(p => new LoadedProjectData(p.Info, p.ResolvedItemPaths, p.ImportPaths))
+            .Select(p => p.ResolvedItemPaths is not null
+                ? LoadedProjectData.Loaded(p.Info, p.ResolvedItemPaths, p.ImportPaths!)
+                : LoadedProjectData.Failed(p.Info))
             .ToList();
 
         var projectLookup = projectData.ToDictionary(p => p.Info.FilePath, p => p.Info);
@@ -42,12 +44,12 @@ public sealed partial class MsBuildProjectGraphLoader(
             projectLookup);
     }
 
-    private static HashSet<string> CollectResolvedItemPaths(MsbProject project)
+    private static HashSet<FilePath> CollectResolvedItemPaths(MsbProject project)
     {
-        var paths = new HashSet<string>(FilePath.PathComparer);
+        var paths = new HashSet<FilePath>();
         var projectDir = Path.GetDirectoryName(project.FullPath)!;
 
-        paths.Add(project.FullPath);
+        paths.Add(FilePath.FromString(project.FullPath));
 
         foreach (var item in project.AllEvaluatedItems)
         {
@@ -55,19 +57,25 @@ public sealed partial class MsBuildProjectGraphLoader(
                 ? Path.GetFullPath(item.EvaluatedInclude)
                 : Path.GetFullPath(Path.Combine(projectDir, item.EvaluatedInclude));
 
-            paths.Add(resolvedPath);
+            if (FilePath.TryFromString(resolvedPath, out var filePath))
+            {
+                paths.Add(filePath.Value);
+            }
         }
 
         return paths;
     }
 
-    private static HashSet<string> CollectImportPaths(MsbProject project)
+    private static HashSet<FilePath> CollectImportPaths(MsbProject project)
     {
-        var paths = new HashSet<string>(FilePath.PathComparer);
+        var paths = new HashSet<FilePath>();
 
         foreach (var import in project.Imports)
         {
-            paths.Add(import.ImportedProject.FullPath);
+            if (FilePath.TryFromString(import.ImportedProject.FullPath, out var filePath))
+            {
+                paths.Add(filePath.Value);
+            }
         }
 
         return paths;
@@ -76,12 +84,12 @@ public sealed partial class MsBuildProjectGraphLoader(
     // todo: find a better solution. The current one is brittle. Furthermore, how do we deal
     // with conditionally referenced projects. e.g. if an item is only included for net472,
     // should only the net472 enabled project references be used. Or is this unnecessary
-    private static HashSet<string> CollectMultiTfmResolvedItemPaths(MsbProject project)
+    private static HashSet<FilePath> CollectMultiTfmResolvedItemPaths(MsbProject project)
     {
-        var paths = new HashSet<string>(FilePath.PathComparer);
+        var paths = new HashSet<FilePath>();
         var projectDir = Path.GetDirectoryName(project.FullPath)!;
 
-        paths.Add(project.FullPath);
+        paths.Add(FilePath.FromString(project.FullPath));
 
         var targetFrameworksProp = project.GetProperty("TargetFrameworks");
         var targetFrameworkProp = project.GetProperty("TargetFramework");
@@ -117,7 +125,10 @@ public sealed partial class MsBuildProjectGraphLoader(
                         ? Path.GetFullPath(item.EvaluatedInclude)
                         : Path.GetFullPath(Path.Combine(projectDir, item.EvaluatedInclude));
 
-                    paths.Add(resolvedPath);
+                    if (FilePath.TryFromString(resolvedPath, out var filePath))
+                    {
+                        paths.Add(filePath.Value);
+                    }
                 }
             }
         }
@@ -244,8 +255,8 @@ public sealed partial class MsBuildProjectGraphLoader(
     private sealed record LoadedProject(
         ProjectInfo Info,
         MsbProject? MsbProject,
-        HashSet<string>? ResolvedItemPaths,
-        HashSet<string>? ImportPaths);
+        HashSet<FilePath>? ResolvedItemPaths,
+        HashSet<FilePath>? ImportPaths);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Loaded project {ProjectPath}")]
     private partial void LogProjectLoaded(string projectPath);
