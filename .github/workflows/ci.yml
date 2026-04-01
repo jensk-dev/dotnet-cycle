@@ -53,7 +53,7 @@ jobs:
 
       - name: Test with coverage
         run: >-
-          dotnet-coverage collect
+          dotnet coverage collect
           --settings coverage.settings.xml
           --output ${{ runner.temp }}/coverage/coverage.cobertura.xml
           --output-format cobertura
