@@ -1,6 +1,6 @@
 ﻿namespace Cycle.Core;
 
-public record ProjectInfo
+public sealed record ProjectInfo
 {
     public ProjectInfo(string name, FilePath filePath)
     {
