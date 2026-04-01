@@ -7,7 +7,10 @@
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- JsonSerializerIsReflectionEnabledByDefault must not be set to false.
+         MSBuild is loaded dynamically at runtime via MSBuildLocator, and its
+         workload SDK resolver uses reflection-based JsonSerializer internally. -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <MinVerTagPrefix>v</MinVerTagPrefix>
