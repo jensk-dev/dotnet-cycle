@@ -12,14 +12,17 @@ Cycle is not a fit for projects that do not use MSBuild as their build system. I
 
 ## Installation
 
+Cycle should be installed as a local tool with a pinned version.
+
 ```bash
-dotnet tool install --global cycle
+dotnet new tool-manifest
+dotnet tool install cycle
 ```
 
 ## Usage
 
 ```bash
-cycle <solution-path> <output-file> [options]
+dotnet cycle <solution-path> <output-file> [options]
 ```
 
 ### Arguments
