@@ -17,6 +17,9 @@
       </Exclude>
     </Attributes>
     <Sources>
+      <Include>
+        <Source>.*[/\\]Cycle\..*\.cs$</Source>
+      </Include>
       <Exclude>
         <Source>.*\.g\.cs$</Source>
       </Exclude>
