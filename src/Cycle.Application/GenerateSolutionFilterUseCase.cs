@@ -6,13 +6,16 @@ public sealed class GenerateSolutionFilterUseCase
 {
     private readonly ISolutionReader _solutionReader;
     private readonly IProjectGraphLoader _graphLoader;
+    private readonly ISolutionFilterWriter _filterWriter;
 
     public GenerateSolutionFilterUseCase(
         ISolutionReader solutionReader,
-        IProjectGraphLoader graphLoader)
+        IProjectGraphLoader graphLoader,
+        ISolutionFilterWriter filterWriter)
     {
         _solutionReader = solutionReader;
         _graphLoader = graphLoader;
+        _filterWriter = filterWriter;
     }
 
     public async Task<GenerateSolutionFilterResult> ExecuteAsync(
@@ -20,6 +23,7 @@ public sealed class GenerateSolutionFilterUseCase
         IReadOnlyList<FilePath> changedFiles,
         bool includeClosure,
         string outputDirectory,
+        TextWriter output,
         CancellationToken ct)
     {
         var projects = await _solutionReader.GetProjectsAsync(solutionPath, ct);
@@ -48,6 +52,8 @@ public sealed class GenerateSolutionFilterUseCase
 
         var filter = SolutionFilterBuilder.Build(
             solutionPath, outputDirectory, includedProjects);
+
+        await _filterWriter.WriteAsync(filter, output, ct);
 
         return new GenerateSolutionFilterResult(
             filter,

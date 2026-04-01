@@ -85,8 +85,9 @@ public static partial class Program
 
             var reader = new MsBuildSolutionReader();
             var graphLoader = new MsBuildProjectGraphLoader(loggerFactory);
+            var filterWriter = new SolutionFilterWriter();
 
-            var useCase = new GenerateSolutionFilterUseCase(reader, graphLoader);
+            var useCase = new GenerateSolutionFilterUseCase(reader, graphLoader, filterWriter);
 
             var solutionPath = SolutionPath.FromString(solutionFile.FullName);
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;
@@ -95,12 +96,9 @@ public static partial class Program
                 Directory.CreateDirectory(outputDir);
             }
 
-            var result = await useCase.ExecuteAsync(
-                solutionPath, changedFiles, includeClosure, outputDir, ct);
-
             await using var writer = new StreamWriter(outputFile.FullName);
-            var filterWriter = new SolutionFilterWriter();
-            await filterWriter.WriteAsync(result.Filter, writer, ct);
+            var result = await useCase.ExecuteAsync(
+                solutionPath, changedFiles, includeClosure, outputDir, writer, ct);
 
             foreach (var unresolved in result.UnresolvedReferences)
             {

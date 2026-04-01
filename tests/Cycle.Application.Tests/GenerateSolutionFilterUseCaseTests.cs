@@ -51,10 +51,10 @@ public sealed class GenerateSolutionFilterUseCaseTests
 
         var solutionReader = new StubSolutionReader([ProjectA, ProjectB]);
         var graphLoader = new StubProjectGraphLoader(graph);
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader);
+        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, new StubSolutionFilterWriter());
 
         var result = await useCase.ExecuteAsync(
-            TestSolutionPath, [changedFile], false, OutputDir, CancellationToken.None);
+            TestSolutionPath, [changedFile], false, OutputDir, TextWriter.Null, CancellationToken.None);
 
         result.IncludedProjects.Count.ShouldBe(1);
         result.IncludedProjects[0].Name.ShouldBe("A");
@@ -91,10 +91,10 @@ public sealed class GenerateSolutionFilterUseCaseTests
 
         var solutionReader = new StubSolutionReader([ProjectA, ProjectB]);
         var graphLoader = new StubProjectGraphLoader(graph);
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader);
+        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, new StubSolutionFilterWriter());
 
         var result = await useCase.ExecuteAsync(
-            TestSolutionPath, [changedFile], true, OutputDir, CancellationToken.None);
+            TestSolutionPath, [changedFile], true, OutputDir, TextWriter.Null, CancellationToken.None);
 
         result.IncludedProjects.Count.ShouldBe(2);
     }
@@ -126,14 +126,54 @@ public sealed class GenerateSolutionFilterUseCaseTests
 
         var solutionReader = new StubSolutionReader([ProjectA]);
         var graphLoader = new StubProjectGraphLoader(graph);
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader);
+        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, new StubSolutionFilterWriter());
 
         var result = await useCase.ExecuteAsync(
-            TestSolutionPath, [changedFile], true, OutputDir, CancellationToken.None);
+            TestSolutionPath, [changedFile], true, OutputDir, TextWriter.Null, CancellationToken.None);
 
         result.UnresolvedReferences.Count.ShouldBe(1);
         result.UnresolvedReferences[0].ReferencedBy.ShouldBe(ProjectAPath);
         result.UnresolvedReferences[0].ReferencePath.ShouldBe(missingPath);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CallsFilterWriter()
+    {
+        var changedFile = FilePath.FromString(
+            Path.Combine(TempBase, "src", "A", "File.cs"));
+        var loadedA = LoadedProjectData.Loaded(
+            ProjectA,
+            new HashSet<FilePath> { ProjectAPath, changedFile },
+            new HashSet<FilePath>());
+        var graph = new ProjectGraph(
+            [loadedA],
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, ProjectInfo>
+            {
+                [ProjectAPath] = ProjectA,
+            });
+
+        var solutionReader = new StubSolutionReader([ProjectA]);
+        var graphLoader = new StubProjectGraphLoader(graph);
+        var filterWriter = new StubSolutionFilterWriter();
+        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, filterWriter);
+
+        await useCase.ExecuteAsync(
+            TestSolutionPath, [changedFile], false, OutputDir, TextWriter.Null, CancellationToken.None);
+
+        filterWriter.LastFilter.ShouldNotBeNull();
+    }
+
+    private sealed class StubSolutionFilterWriter : ISolutionFilterWriter
+    {
+        public SolutionFilter? LastFilter { get; private set; }
+
+        public Task WriteAsync(SolutionFilter filter, TextWriter output, CancellationToken ct)
+        {
+            LastFilter = filter;
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class StubSolutionReader(
