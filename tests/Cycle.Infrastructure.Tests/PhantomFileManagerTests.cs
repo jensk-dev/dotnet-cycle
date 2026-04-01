@@ -1,4 +1,4 @@
-﻿using Cycle.Core;
+using Cycle.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 

@@ -1,4 +1,4 @@
-﻿namespace Cycle.Core.Tests;
+namespace Cycle.Core.Tests;
 
 public sealed class ProjectInfoTests
 {

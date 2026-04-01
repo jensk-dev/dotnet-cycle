@@ -1,4 +1,4 @@
-﻿using System.CommandLine;
+using System.CommandLine;
 using Cycle.Application;
 using Cycle.Core;
 using Cycle.Infrastructure;

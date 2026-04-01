@@ -1,4 +1,4 @@
-﻿namespace Cycle.Infrastructure.Tests.Helpers;
+namespace Cycle.Infrastructure.Tests.Helpers;
 
 public sealed class TempCsProj : IDisposable
 {

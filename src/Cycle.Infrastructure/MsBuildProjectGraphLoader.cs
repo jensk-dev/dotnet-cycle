@@ -1,4 +1,4 @@
-﻿using Cycle.Core;
+using Cycle.Core;
 using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
 using Microsoft.Extensions.Logging;

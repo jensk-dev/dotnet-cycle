@@ -1,4 +1,4 @@
-﻿using Cycle.Core;
+using Cycle.Core;
 using Microsoft.VisualStudio.SolutionPersistence.Serializer;
 
 namespace Cycle.Infrastructure;

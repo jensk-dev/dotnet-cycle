@@ -1,4 +1,4 @@
-﻿namespace Cycle.Core;
+namespace Cycle.Core;
 
 public static class AffectedProjectsResolver
 {

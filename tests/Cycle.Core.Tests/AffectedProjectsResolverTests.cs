@@ -234,7 +234,7 @@ public sealed class AffectedProjectsResolverTests
 
     private static HashSet<FilePath> MakePathSet(params FilePath[] paths)
     {
-        return [..paths];
+        return [.. paths];
     }
 
     private static LoadedProjectData MakeLoadedProject(

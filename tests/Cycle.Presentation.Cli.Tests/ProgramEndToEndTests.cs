@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Cycle.Tests.Common;
 
 namespace Cycle.Presentation.Cli.Tests;

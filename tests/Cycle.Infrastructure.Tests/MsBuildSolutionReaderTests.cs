@@ -1,4 +1,4 @@
-﻿using Cycle.Core;
+using Cycle.Core;
 using Cycle.Infrastructure.Tests.Helpers;
 using Cycle.Tests.Common;
 
