@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Cycle.Core;
+using Cycle.Application;
 
 namespace Cycle.Infrastructure.MsBuild;
 

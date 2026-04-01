@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Cycle.Core;
+using Cycle.Application;
 
 namespace Cycle.Infrastructure.MsBuild.Tests;
 

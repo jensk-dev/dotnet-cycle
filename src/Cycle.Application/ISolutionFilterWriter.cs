@@ -1,4 +1,4 @@
-namespace Cycle.Core;
+namespace Cycle.Application;
 
 public interface ISolutionFilterWriter
 {

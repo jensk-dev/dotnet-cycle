@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Cycle.Core;
+using Cycle.Application;
 using FsCheck;
 using FsCheck.Fluent;
 using FsCheck.Xunit;

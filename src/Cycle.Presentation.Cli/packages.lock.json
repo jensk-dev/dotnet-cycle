@@ -186,6 +186,7 @@
       "cycle.infrastructure.msbuild": {
         "type": "Project",
         "dependencies": {
+          "Cycle.Application": "[1.0.0, )",
           "Cycle.Core": "[1.0.0, )",
           "Microsoft.Build": "[18.4.0, )",
           "Microsoft.Build.Framework": "[18.4.0, )",
