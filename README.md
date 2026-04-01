@@ -143,66 +143,34 @@ References that point to projects outside the solution cannot be included in the
 
 The affected project paths are made relative to the solution directory and written as a standard .slnf file in JSON format. A summary line is written to stderr reporting the total number of projects in the solution, the number included in the filter, and the number that failed to load.
 
-## Two-dot vs three-dot diff
+## Generating the changed file list in CI
 
-The examples above use `git diff --name-only A...B` (three dots). This matters when your branch has diverged from the base:
+Use a three-dot diff (`...`) to generate the changed file list. A three-dot diff compares against the merge base — the point where the branch diverged — rather than the current tip of the target branch. This ensures the file list contains only the changes introduced by the branch, not unrelated changes merged into the target since the branch was created.
 
-```mermaid
-gitGraph
-    commit id: "A"
-    commit id: "B"
-    branch feature
-    commit id: "C"
-    commit id: "D"
-    commit id: "E"
-    checkout main
-    commit id: "F"
-    commit id: "G"
+### GitHub Actions
+
+```yaml
+# ...
+
+- name: Determine affected projects
+  run: |
+    git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD \
+      | cycle MySolution.slnx affected.slnf
+
+# ...
 ```
 
-### Two-dot diff (`..`) — tip to tip
+### Azure DevOps
 
-Compares G directly against E. The diff includes changes from both sides: files changed on main (F, G) and files changed on the feature branch (C, D, E). This leads to unrelated projects in the filter.
+```yaml
+# ...
 
-```mermaid
-gitGraph
-    commit id: "A"
-    commit id: "B"
-    branch feature
-    commit id: "C"
-    commit id: "D"
-    commit id: "E" type: HIGHLIGHT
-    checkout main
-    commit id: "F" type: REVERSE
-    commit id: "G" type: REVERSE
+- script: |
+    git diff --name-only origin/$(System.PullRequest.TargetBranchName)...HEAD \
+      | cycle MySolution.slnx affected.slnf
+
+# ...
 ```
-
-```bash
-git diff --name-only main..feature   # compares G vs E
-```
-
-### Three-dot diff (`...`) — merge base to tip
-
-Finds the common ancestor (B) and compares only what changed since that point. This gives you exactly the files the feature branch introduced.
-
-```mermaid
-gitGraph
-    commit id: "A"
-    commit id: "B" type: HIGHLIGHT
-    branch feature
-    commit id: "C" type: HIGHLIGHT
-    commit id: "D" type: HIGHLIGHT
-    commit id: "E" type: HIGHLIGHT
-    checkout main
-    commit id: "F"
-    commit id: "G"
-```
-
-```bash
-git diff --name-only main...feature  # compares B vs E
-```
-
-Use three dots (`...`) for feature branches. For consecutive commits on the same branch (e.g. `HEAD~1...HEAD`), both forms are equivalent.
 
 ## Known Limitations
 
