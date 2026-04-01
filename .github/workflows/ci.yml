@@ -81,14 +81,6 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: dotnet pack Cycle.slnx --no-build -c Release
 
-      - name: Publish (trimmed, validation only)
-        if: matrix.os == 'ubuntu-latest'
-        run: >-
-          dotnet publish src/Cycle.Presentation.Cli/Cycle.Presentation.Cli.csproj
-          -c Release -r linux-x64 --self-contained
-          -p:PublishTrimmed=true
-          -p:SuppressTrimAnalysisWarnings=false
-
       - name: Upload packages
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v4

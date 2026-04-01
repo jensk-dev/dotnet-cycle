@@ -6,8 +6,6 @@
     <ToolCommandName>cycle</ToolCommandName>
     <PackageId>cycle</PackageId>
     <Description>Generates a solution filter (.slnf) from affected .NET projects</Description>
-    <IsTrimmable>true</IsTrimmable>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
   </PropertyGroup>
 
   <ItemGroup>
