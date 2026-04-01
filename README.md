@@ -36,11 +36,11 @@ dotnet cycle <solution-path> <output-file> [options]
 
 | Option | Description | Default |
 |---|---|---|
-| `--changed-files <path>` | File containing changed file paths (one per line) | |
+| `--files <path>` | File containing file paths (one per line) | |
 | `--no-closure` | Exclude transitive build dependencies (ProjectReferences) from the filter | `false` |
 | `--log-level <level>` | Log verbosity: `quiet`, `minimal`, `normal`, `verbose` | `minimal` |
 
-Changed files are read from `--changed-files` if provided, otherwise from stdin when input is piped.
+File paths are read from `--files` if provided, otherwise from stdin when input is piped.
 
 ## Examples
 
@@ -60,7 +60,7 @@ git diff --name-only HEAD~1...HEAD | cycle MySolution.slnx affected.slnfdotnet b
 Use a file list:
 
 ```bash
-cycle MySolution.slnx affected.slnf --changed-files changes.txt
+cycle MySolution.slnx affected.slnf --files changes.txt
 ```
 
 ## How it works
@@ -69,7 +69,7 @@ Cycle processes a list of changed files through a pipeline of seven steps to pro
 
 ### 1. Input parsing
 
-Changed file paths are read from the file specified via `--changed-files`, or from standard input when input is piped. Each path is normalized to an absolute path. Paths that cannot be resolved are logged and skipped.
+File paths are read from the file specified via `--files`, or from standard input when input is piped. Each path is normalized to an absolute path. Paths that cannot be resolved are logged and skipped.
 
 ### 2. Solution reading
 

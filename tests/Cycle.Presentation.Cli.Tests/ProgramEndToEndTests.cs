@@ -26,7 +26,7 @@ public sealed class ProgramEndToEndTests : IClassFixture<MsBuildFixture>, IDispo
     {
         var (slnPath, changedFilePath, outputPath) = SetUpProject("ClassA.cs", "class A {}");
 
-        var exitCode = await Program.Main([slnPath, outputPath, "--changed-files", changedFilePath]);
+        var exitCode = await Program.Main([slnPath, outputPath, "--files", changedFilePath]);
 
         exitCode.ShouldBe(0);
         File.Exists(outputPath).ShouldBeTrue();
@@ -55,7 +55,7 @@ public sealed class ProgramEndToEndTests : IClassFixture<MsBuildFixture>, IDispo
         File.WriteAllText(changedFilePath, "");
         var outputPath = Path.Combine(_testDir, "output.slnf");
 
-        var exitCode = await Program.Main([slnPath, outputPath, "--changed-files", changedFilePath]);
+        var exitCode = await Program.Main([slnPath, outputPath, "--files", changedFilePath]);
 
         exitCode.ShouldBe(0);
         var json = await File.ReadAllTextAsync(outputPath, TestContext.Current.CancellationToken);
@@ -71,7 +71,7 @@ public sealed class ProgramEndToEndTests : IClassFixture<MsBuildFixture>, IDispo
         File.WriteAllText(changedFilePath, "");
 
         var exitCode = await Program.Main(
-            [Path.Combine(_testDir, "nonexistent.slnx"), outputPath, "--changed-files", changedFilePath]);
+            [Path.Combine(_testDir, "nonexistent.slnx"), outputPath, "--files", changedFilePath]);
 
         exitCode.ShouldBe(1);
     }
@@ -82,7 +82,7 @@ public sealed class ProgramEndToEndTests : IClassFixture<MsBuildFixture>, IDispo
         var (slnPath, changedFilePath, outputPath) = SetUpProject("ClassA.cs", "class A {}");
 
         var exitCode = await Program.Main(
-            [slnPath, outputPath, "--changed-files", changedFilePath, "--log-level", "verbose"]);
+            [slnPath, outputPath, "--files", changedFilePath, "--log-level", "verbose"]);
 
         exitCode.ShouldBe(0);
     }

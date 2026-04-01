@@ -15,9 +15,9 @@ public static partial class Program
             Description = "Path to the solution file (.sln or .slnx)",
         };
 
-        var changedFilesOption = new Option<FileInfo?>("--changed-files")
+        var filesOption = new Option<FileInfo?>("--files")
         {
-            Description = "Path to a file containing changed file paths (one per line)",
+            Description = "Path to a file containing file paths (one per line)",
         };
 
         var outputFileArg = new Argument<FileInfo>("output-file")
@@ -37,11 +37,11 @@ public static partial class Program
             Description = "Exclude transitive build dependencies (ProjectReferences) from the filter",
         };
 
-        var rootCommand = new RootCommand("Generates a solution filter (.slnf) from a list of changed files")
+        var rootCommand = new RootCommand("Generates a solution filter (.slnf) from a list of files")
         {
             solutionArg,
             outputFileArg,
-            changedFilesOption,
+            filesOption,
             logLevelOption,
             noClosureOption,
         };
@@ -49,14 +49,14 @@ public static partial class Program
         rootCommand.SetAction(async (parseResult, ct) =>
         {
             var solutionFile = parseResult.GetValue(solutionArg)!;
-            var changedFilesFile = parseResult.GetValue(changedFilesOption);
+            var inputFile = parseResult.GetValue(filesOption);
             var outputFile = parseResult.GetValue(outputFileArg)!;
             var logLevel = parseResult.GetValue(logLevelOption) ?? "minimal";
             var includeClosure = !parseResult.GetValue(noClosureOption);
 
             return await RunAsync(
                 solutionFile,
-                changedFilesFile,
+                inputFile,
                 outputFile,
                 logLevel,
                 includeClosure,
@@ -69,7 +69,7 @@ public static partial class Program
 
     internal static async Task<int> RunAsync(
         FileInfo solutionFile,
-        FileInfo? changedFilesFile,
+        FileInfo? inputFile,
         FileInfo outputFile,
         string logLevel,
         bool includeClosure,
@@ -81,7 +81,7 @@ public static partial class Program
         try
         {
             MsBuildBootstrap.Initialize();
-            var changedFiles = await ReadChangedFilesAsync(changedFilesFile, Console.In, Console.IsInputRedirected, logger, ct);
+            var changedFiles = await ReadFilesAsync(inputFile, Console.In, Console.IsInputRedirected, logger, ct);
 
             var reader = new MsBuildSolutionReader();
             var graphLoader = new MsBuildProjectGraphLoader(loggerFactory);
@@ -124,8 +124,8 @@ public static partial class Program
         }
     }
 
-    internal static async Task<IReadOnlyList<FilePath>> ReadChangedFilesAsync(
-        FileInfo? changedFilesFile,
+    internal static async Task<IReadOnlyList<FilePath>> ReadFilesAsync(
+        FileInfo? inputFile,
         TextReader stdinReader,
         bool isInputRedirected,
         ILogger logger,
@@ -133,9 +133,9 @@ public static partial class Program
     {
         IEnumerable<string> lines;
 
-        if (changedFilesFile is not null)
+        if (inputFile is not null)
         {
-            lines = await File.ReadAllLinesAsync(changedFilesFile.FullName, ct);
+            lines = await File.ReadAllLinesAsync(inputFile.FullName, ct);
         }
         else if (isInputRedirected)
         {
