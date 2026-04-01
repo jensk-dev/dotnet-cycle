@@ -3,10 +3,11 @@
   <CodeCoverage>
     <ModulePaths>
       <Include>
-        <ModulePath>.*Cycle\.Core\.dll$</ModulePath>
-        <ModulePath>.*Cycle\.Infrastructure\.dll$</ModulePath>
-        <ModulePath>.*Cycle\.Presentation\.Cli\.dll$</ModulePath>
+        <ModulePath>.*Cycle\..*\.dll$</ModulePath>
       </Include>
+      <Exclude>
+        <ModulePath>.*\.Tests(\..*)?\.dll$</ModulePath>
+      </Exclude>
     </ModulePaths>
     <Attributes>
       <Exclude>
