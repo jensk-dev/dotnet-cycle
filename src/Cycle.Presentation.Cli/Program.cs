@@ -84,11 +84,9 @@ public static partial class Program
             var changedFiles = await ReadChangedFilesAsync(changedFilesFile, Console.In, Console.IsInputRedirected, logger, ct);
 
             var reader = new MsBuildSolutionReader();
-            var affectedResolver = new AffectedProjectsResolver();
-            var closureResolver = new DependencyClosureResolver();
             var graphLoader = new MsBuildProjectGraphLoader(loggerFactory);
 
-            var useCase = new GenerateSolutionFilterUseCase(reader, graphLoader, affectedResolver, closureResolver);
+            var useCase = new GenerateSolutionFilterUseCase(reader, graphLoader);
 
             var solutionPath = SolutionPath.FromString(solutionFile.FullName);
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile.FullName))!;

@@ -23,67 +23,118 @@ public sealed class GenerateSolutionFilterUseCaseTests
     [Fact]
     public async Task ExecuteAsync_WithoutClosure_ReturnsAffectedOnly()
     {
-        var affected = new Dictionary<FilePath, ProjectInfo> { [ProjectAPath] = ProjectA };
-        var solutionReader = new StubSolutionReader([]);
-        var graphLoader = new StubProjectGraphLoader(CreateEmptyGraph());
-        var affectedResolver = new StubAffectedProjectsResolver(
-            new AffectedProjectsResult(affected, new Dictionary<FilePath, ProjectInfo>()));
-        var closureResolver = new SpyClosureResolver();
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, affectedResolver, closureResolver);
+        var changedFile = FilePath.FromString(
+            Path.Combine(TempBase, "src", "A", "File.cs"));
+        var loadedA = LoadedProjectData.Loaded(
+            ProjectA,
+            new HashSet<FilePath> { ProjectAPath, changedFile },
+            new HashSet<FilePath>());
+        var loadedB = LoadedProjectData.Loaded(
+            ProjectB,
+            new HashSet<FilePath> { ProjectBPath },
+            new HashSet<FilePath>());
+
+        // Forward map: A depends on B. If closure ran, B would be included.
+        var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
+        {
+            [ProjectAPath] = new HashSet<FilePath> { ProjectBPath },
+        };
+        var graph = new ProjectGraph(
+            [loadedA, loadedB],
+            forwardMap,
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, ProjectInfo>
+            {
+                [ProjectAPath] = ProjectA,
+                [ProjectBPath] = ProjectB,
+            });
+
+        var solutionReader = new StubSolutionReader([ProjectA, ProjectB]);
+        var graphLoader = new StubProjectGraphLoader(graph);
+        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader);
 
         var result = await useCase.ExecuteAsync(
-            TestSolutionPath, [], false, OutputDir, CancellationToken.None);
+            TestSolutionPath, [changedFile], false, OutputDir, CancellationToken.None);
 
         result.IncludedProjects.Count.ShouldBe(1);
         result.IncludedProjects[0].Name.ShouldBe("A");
         result.UnresolvedReferences.ShouldBeEmpty();
-        closureResolver.WasCalled.ShouldBeFalse();
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithClosure_CallsClosureResolverAndReturnsClosureProjects()
+    public async Task ExecuteAsync_WithClosure_ReturnsClosureProjects()
     {
-        var affected = new Dictionary<FilePath, ProjectInfo> { [ProjectAPath] = ProjectA };
-        var closureProjects = new List<ProjectInfo> { ProjectA, ProjectB };
-        var solutionReader = new StubSolutionReader([]);
-        var graphLoader = new StubProjectGraphLoader(CreateEmptyGraph());
-        var affectedResolver = new StubAffectedProjectsResolver(
-            new AffectedProjectsResult(affected, new Dictionary<FilePath, ProjectInfo>()));
-        var closureResolver = new SpyClosureResolver(
-            new ClosureResult(closureProjects, []));
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, affectedResolver, closureResolver);
+        var changedFile = FilePath.FromString(
+            Path.Combine(TempBase, "src", "A", "File.cs"));
+        var loadedA = LoadedProjectData.Loaded(
+            ProjectA,
+            new HashSet<FilePath> { ProjectAPath, changedFile },
+            new HashSet<FilePath>());
+        var loadedB = LoadedProjectData.Loaded(
+            ProjectB,
+            new HashSet<FilePath> { ProjectBPath },
+            new HashSet<FilePath>());
+
+        var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
+        {
+            [ProjectAPath] = new HashSet<FilePath> { ProjectBPath },
+        };
+        var graph = new ProjectGraph(
+            [loadedA, loadedB],
+            forwardMap,
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, ProjectInfo>
+            {
+                [ProjectAPath] = ProjectA,
+                [ProjectBPath] = ProjectB,
+            });
+
+        var solutionReader = new StubSolutionReader([ProjectA, ProjectB]);
+        var graphLoader = new StubProjectGraphLoader(graph);
+        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader);
 
         var result = await useCase.ExecuteAsync(
-            TestSolutionPath, [], true, OutputDir, CancellationToken.None);
+            TestSolutionPath, [changedFile], true, OutputDir, CancellationToken.None);
 
         result.IncludedProjects.Count.ShouldBe(2);
-        closureResolver.WasCalled.ShouldBeTrue();
     }
 
     [Fact]
     public async Task ExecuteAsync_WithClosure_PropagatesUnresolvedReferences()
     {
-        var affected = new Dictionary<FilePath, ProjectInfo> { [ProjectAPath] = ProjectA };
-        var unresolved = new UnresolvedReference(ProjectAPath, ProjectBPath);
-        var solutionReader = new StubSolutionReader([]);
-        var graphLoader = new StubProjectGraphLoader(CreateEmptyGraph());
-        var affectedResolver = new StubAffectedProjectsResolver(
-            new AffectedProjectsResult(affected, new Dictionary<FilePath, ProjectInfo>()));
-        var closureResolver = new SpyClosureResolver(
-            new ClosureResult([ProjectA], [unresolved]));
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, affectedResolver, closureResolver);
+        var changedFile = FilePath.FromString(
+            Path.Combine(TempBase, "src", "A", "File.cs"));
+        var missingPath = FilePath.FromString(
+            Path.Combine(TempBase, "src", "Missing", "Missing.csproj"));
+        var loadedA = LoadedProjectData.Loaded(
+            ProjectA,
+            new HashSet<FilePath> { ProjectAPath, changedFile },
+            new HashSet<FilePath>());
+
+        var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
+        {
+            [ProjectAPath] = new HashSet<FilePath> { missingPath },
+        };
+        var graph = new ProjectGraph(
+            [loadedA],
+            forwardMap,
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, ProjectInfo>
+            {
+                [ProjectAPath] = ProjectA,
+            });
+
+        var solutionReader = new StubSolutionReader([ProjectA]);
+        var graphLoader = new StubProjectGraphLoader(graph);
+        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader);
 
         var result = await useCase.ExecuteAsync(
-            TestSolutionPath, [], true, OutputDir, CancellationToken.None);
+            TestSolutionPath, [changedFile], true, OutputDir, CancellationToken.None);
 
         result.UnresolvedReferences.Count.ShouldBe(1);
-        result.UnresolvedReferences[0].ShouldBe(unresolved);
+        result.UnresolvedReferences[0].ReferencedBy.ShouldBe(ProjectAPath);
+        result.UnresolvedReferences[0].ReferencePath.ShouldBe(missingPath);
     }
-
-    private static ProjectGraph CreateEmptyGraph() =>
-        new([], new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
-            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
-            new Dictionary<FilePath, ProjectInfo>());
 
     private sealed class StubSolutionReader(
         IReadOnlyList<ProjectInfo> projects) : ISolutionReader
@@ -103,38 +154,6 @@ public sealed class GenerateSolutionFilterUseCaseTests
             CancellationToken ct)
         {
             return graph;
-        }
-    }
-
-    private sealed class StubAffectedProjectsResolver(
-        AffectedProjectsResult result) : IAffectedProjectsResolver
-    {
-        public AffectedProjectsResult Resolve(
-            IReadOnlyList<LoadedProjectData> projects,
-            IReadOnlyDictionary<FilePath, IReadOnlySet<FilePath>> reverseMap,
-            IReadOnlyList<FilePath> changedFiles)
-        {
-            return result;
-        }
-    }
-
-    private sealed class SpyClosureResolver : IDependencyClosureResolver
-    {
-        private readonly ClosureResult _result;
-        public bool WasCalled { get; private set; }
-
-        public SpyClosureResolver(ClosureResult? result = null)
-        {
-            _result = result ?? new ClosureResult([], []);
-        }
-
-        public ClosureResult Resolve(
-            IReadOnlyDictionary<FilePath, ProjectInfo> affected,
-            IReadOnlyDictionary<FilePath, IReadOnlySet<FilePath>> forwardMap,
-            IReadOnlyDictionary<FilePath, ProjectInfo> projectLookup)
-        {
-            WasCalled = true;
-            return _result;
         }
     }
 }

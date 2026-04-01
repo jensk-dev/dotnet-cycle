@@ -6,19 +6,13 @@ public sealed class GenerateSolutionFilterUseCase
 {
     private readonly ISolutionReader _solutionReader;
     private readonly IProjectGraphLoader _graphLoader;
-    private readonly IAffectedProjectsResolver _affectedResolver;
-    private readonly IDependencyClosureResolver _closureResolver;
 
     public GenerateSolutionFilterUseCase(
         ISolutionReader solutionReader,
-        IProjectGraphLoader graphLoader,
-        IAffectedProjectsResolver affectedResolver,
-        IDependencyClosureResolver closureResolver)
+        IProjectGraphLoader graphLoader)
     {
         _solutionReader = solutionReader;
         _graphLoader = graphLoader;
-        _affectedResolver = affectedResolver;
-        _closureResolver = closureResolver;
     }
 
     public async Task<GenerateSolutionFilterResult> ExecuteAsync(
@@ -31,7 +25,7 @@ public sealed class GenerateSolutionFilterUseCase
         var projects = await _solutionReader.GetProjectsAsync(solutionPath, ct);
         var graph = _graphLoader.Load(projects, changedFiles, ct);
 
-        var affectedResult = _affectedResolver.Resolve(
+        var affectedResult = AffectedProjectsResolver.Resolve(
             graph.Projects, graph.ReverseDependencyMap, changedFiles);
 
         IReadOnlyList<ProjectInfo> includedProjects;
@@ -39,7 +33,7 @@ public sealed class GenerateSolutionFilterUseCase
 
         if (includeClosure)
         {
-            var closure = _closureResolver.Resolve(
+            var closure = DependencyClosureResolver.Resolve(
                 affectedResult.AffectedProjects,
                 graph.ForwardDependencyMap,
                 graph.ProjectLookup);

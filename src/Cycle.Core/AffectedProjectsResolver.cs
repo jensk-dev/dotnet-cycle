@@ -1,8 +1,8 @@
 ﻿namespace Cycle.Core;
 
-public sealed class AffectedProjectsResolver : IAffectedProjectsResolver
+public static class AffectedProjectsResolver
 {
-    public AffectedProjectsResult Resolve(
+    public static AffectedProjectsResult Resolve(
         IReadOnlyList<LoadedProjectData> projects,
         IReadOnlyDictionary<FilePath, IReadOnlySet<FilePath>> reverseMap,
         IReadOnlyList<FilePath> changedFiles)

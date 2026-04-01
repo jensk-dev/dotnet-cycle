@@ -2,7 +2,6 @@
 
 public sealed class DependencyClosureResolverTests
 {
-    private readonly DependencyClosureResolver _sut = new();
 
     [Fact]
     public void Resolve_DirectDependency_IncludesDependency()
@@ -21,7 +20,7 @@ public sealed class DependencyClosureResolverTests
             [b.FilePath] = b,
         };
 
-        var result = _sut.Resolve(affected, forwardMap, projectLookup);
+        var result = DependencyClosureResolver.Resolve(affected, forwardMap, projectLookup);
 
         result.Projects.Count.ShouldBe(2);
         var names = result.Projects.Select(p => p.Name).OrderBy(n => n).ToList();
@@ -49,7 +48,7 @@ public sealed class DependencyClosureResolverTests
             [c.FilePath] = c,
         };
 
-        var result = _sut.Resolve(affected, forwardMap, projectLookup);
+        var result = DependencyClosureResolver.Resolve(affected, forwardMap, projectLookup);
 
         result.Projects.Count.ShouldBe(3);
         var names = result.Projects.Select(p => p.Name).OrderBy(n => n).ToList();
@@ -80,7 +79,7 @@ public sealed class DependencyClosureResolverTests
             [shared.FilePath] = shared,
         };
 
-        var result = _sut.Resolve(affected, forwardMap, projectLookup);
+        var result = DependencyClosureResolver.Resolve(affected, forwardMap, projectLookup);
 
         result.Projects.Count.ShouldBe(3);
         var names = result.Projects.Select(p => p.Name).OrderBy(n => n).ToList();
@@ -103,7 +102,7 @@ public sealed class DependencyClosureResolverTests
             [a.FilePath] = a,
         };
 
-        var result = _sut.Resolve(affected, forwardMap, projectLookup);
+        var result = DependencyClosureResolver.Resolve(affected, forwardMap, projectLookup);
 
         result.Projects.Count.ShouldBe(1);
         result.UnresolvedReferences.Count.ShouldBe(1);
@@ -118,7 +117,7 @@ public sealed class DependencyClosureResolverTests
         var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
         var projectLookup = new Dictionary<FilePath, ProjectInfo>();
 
-        var result = _sut.Resolve(affected, forwardMap, projectLookup);
+        var result = DependencyClosureResolver.Resolve(affected, forwardMap, projectLookup);
 
         result.Projects.ShouldBeEmpty();
         result.UnresolvedReferences.ShouldBeEmpty();
@@ -136,7 +135,7 @@ public sealed class DependencyClosureResolverTests
             [a.FilePath] = a,
         };
 
-        var result = _sut.Resolve(affected, forwardMap, projectLookup);
+        var result = DependencyClosureResolver.Resolve(affected, forwardMap, projectLookup);
 
         result.Projects.Count.ShouldBe(1);
         result.Projects[0].Name.ShouldBe("A");
