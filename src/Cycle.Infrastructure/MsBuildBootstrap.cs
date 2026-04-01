@@ -1,6 +1,6 @@
 ﻿using Microsoft.Build.Locator;
 
-namespace Cycle.Infrastructure.MsBuild;
+namespace Cycle.Infrastructure;
 
 public static class MsBuildBootstrap
 {

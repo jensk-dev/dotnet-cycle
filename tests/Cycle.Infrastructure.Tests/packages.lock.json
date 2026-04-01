@@ -311,7 +311,7 @@
       "cycle.core": {
         "type": "Project"
       },
-      "cycle.infrastructure.msbuild": {
+      "cycle.infrastructure": {
         "type": "Project",
         "dependencies": {
           "Cycle.Application": "[1.0.0, )",
@@ -326,7 +326,7 @@
       "cycle.tests.common": {
         "type": "Project",
         "dependencies": {
-          "Cycle.Infrastructure.MsBuild": "[1.0.0, )"
+          "Cycle.Infrastructure": "[1.0.0, )"
         }
       },
       "FsCheck": {

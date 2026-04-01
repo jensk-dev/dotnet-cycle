@@ -1,7 +1,7 @@
 ﻿using Cycle.Core;
 using Microsoft.Extensions.Logging;
 
-namespace Cycle.Infrastructure.MsBuild;
+namespace Cycle.Infrastructure;
 
 public sealed partial class PhantomFileManager(ILogger<PhantomFileManager> logger) : IDisposable
 {

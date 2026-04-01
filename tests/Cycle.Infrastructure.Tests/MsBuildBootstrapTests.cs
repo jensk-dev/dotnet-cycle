@@ -1,4 +1,4 @@
-﻿namespace Cycle.Infrastructure.MsBuild.Tests;
+﻿namespace Cycle.Infrastructure.Tests;
 
 public sealed class MsBuildBootstrapTests
 {

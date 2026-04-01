@@ -1,7 +1,7 @@
 ﻿using Cycle.Core;
 using Microsoft.VisualStudio.SolutionPersistence.Serializer;
 
-namespace Cycle.Infrastructure.MsBuild;
+namespace Cycle.Infrastructure;
 
 public class MsBuildSolutionReader : ISolutionReader
 {

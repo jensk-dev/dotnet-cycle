@@ -1,8 +1,8 @@
 ﻿using Cycle.Core;
-using Cycle.Infrastructure.MsBuild.Tests.Helpers;
+using Cycle.Infrastructure.Tests.Helpers;
 using Cycle.Tests.Common;
 
-namespace Cycle.Infrastructure.MsBuild.Tests;
+namespace Cycle.Infrastructure.Tests;
 
 public sealed class MsBuildSolutionReaderTests : IClassFixture<MsBuildFixture>, IDisposable
 {

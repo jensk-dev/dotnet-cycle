@@ -128,11 +128,11 @@ jobs:
           --test-project tests/Cycle.Core.Tests/Cycle.Core.Tests.csproj
           --output ${{ runner.temp }}/stryker-core
 
-      - name: Stryker - Cycle.Infrastructure.MsBuild
+      - name: Stryker - Cycle.Infrastructure
         run: >-
           dotnet stryker
-          --project src/Cycle.Infrastructure.MsBuild/Cycle.Infrastructure.MsBuild.csproj
-          --test-project tests/Cycle.Infrastructure.MsBuild.Tests/Cycle.Infrastructure.MsBuild.Tests.csproj
+          --project src/Cycle.Infrastructure/Cycle.Infrastructure.csproj
+          --test-project tests/Cycle.Infrastructure.Tests/Cycle.Infrastructure.Tests.csproj
           --output ${{ runner.temp }}/stryker-infra
 
       - name: Upload Stryker reports

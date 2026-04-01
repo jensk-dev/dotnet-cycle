@@ -1,4 +1,4 @@
-﻿namespace Cycle.Infrastructure.MsBuild.Tests.Helpers;
+﻿namespace Cycle.Infrastructure.Tests.Helpers;
 
 public static class TempSlnx
 {

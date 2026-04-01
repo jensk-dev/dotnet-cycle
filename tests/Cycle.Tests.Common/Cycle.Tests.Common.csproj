@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Cycle.Infrastructure.MsBuild\Cycle.Infrastructure.MsBuild.csproj" />
+    <ProjectReference Include="..\..\src\Cycle.Infrastructure\Cycle.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

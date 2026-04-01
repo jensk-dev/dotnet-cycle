@@ -4,7 +4,7 @@ using FsCheck;
 using FsCheck.Fluent;
 using FsCheck.Xunit;
 
-namespace Cycle.Infrastructure.MsBuild.Tests;
+namespace Cycle.Infrastructure.Tests;
 
 public sealed class SolutionFilterPropertyTests
 {

@@ -1,4 +1,4 @@
-using Cycle.Infrastructure.MsBuild;
+using Cycle.Infrastructure;
 
 namespace Cycle.Tests.Common;
 

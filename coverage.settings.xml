@@ -4,7 +4,7 @@
     <ModulePaths>
       <Include>
         <ModulePath>.*Cycle\.Core\.dll$</ModulePath>
-        <ModulePath>.*Cycle\.Infrastructure\.MsBuild\.dll$</ModulePath>
+        <ModulePath>.*Cycle\.Infrastructure\.dll$</ModulePath>
         <ModulePath>.*Cycle\.Presentation\.Cli\.dll$</ModulePath>
       </Include>
     </ModulePaths>

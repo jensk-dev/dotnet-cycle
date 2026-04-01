@@ -19,7 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Cycle.Application\Cycle.Application.csproj" />
     <ProjectReference Include="..\Cycle.Core\Cycle.Core.csproj" />
-    <ProjectReference Include="..\Cycle.Infrastructure.MsBuild\Cycle.Infrastructure.MsBuild.csproj" />
+    <ProjectReference Include="..\Cycle.Infrastructure\Cycle.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

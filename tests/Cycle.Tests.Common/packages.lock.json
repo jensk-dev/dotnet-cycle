@@ -80,7 +80,7 @@
       "cycle.core": {
         "type": "Project"
       },
-      "cycle.infrastructure.msbuild": {
+      "cycle.infrastructure": {
         "type": "Project",
         "dependencies": {
           "Cycle.Application": "[1.0.0, )",

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Cycle.Application;
 
-namespace Cycle.Infrastructure.MsBuild.Tests;
+namespace Cycle.Infrastructure.Tests;
 
 public sealed class SolutionFilterWriterTests : IDisposable
 {

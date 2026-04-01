@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 using MsbProject = Microsoft.Build.Evaluation.Project;
 
-namespace Cycle.Infrastructure.MsBuild;
+namespace Cycle.Infrastructure;
 
 public sealed partial class MsBuildProjectGraphLoader(
     ILoggerFactory loggerFactory)

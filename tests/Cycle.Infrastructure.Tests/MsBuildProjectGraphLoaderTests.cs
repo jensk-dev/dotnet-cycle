@@ -1,9 +1,9 @@
 using Cycle.Core;
-using Cycle.Infrastructure.MsBuild.Tests.Helpers;
+using Cycle.Infrastructure.Tests.Helpers;
 using Cycle.Tests.Common;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Cycle.Infrastructure.MsBuild.Tests;
+namespace Cycle.Infrastructure.Tests;
 
 public sealed class MsBuildProjectGraphLoaderTests : IClassFixture<MsBuildFixture>, IDisposable
 {

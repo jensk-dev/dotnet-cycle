@@ -1,7 +1,7 @@
 ﻿using System.CommandLine;
 using Cycle.Application;
 using Cycle.Core;
-using Cycle.Infrastructure.MsBuild;
+using Cycle.Infrastructure;
 using Microsoft.Extensions.Logging;
 
 namespace Cycle.Presentation.Cli;

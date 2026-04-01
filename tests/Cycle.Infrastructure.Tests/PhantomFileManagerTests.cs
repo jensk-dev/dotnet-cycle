@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Cycle.Infrastructure.MsBuild.Tests;
+namespace Cycle.Infrastructure.Tests;
 
 public sealed class PhantomFileManagerTests : IDisposable
 {
