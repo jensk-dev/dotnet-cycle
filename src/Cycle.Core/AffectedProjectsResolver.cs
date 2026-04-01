@@ -1,6 +1,6 @@
 ﻿namespace Cycle.Core;
 
-public class AffectedProjectsResolver : IAffectedProjectsResolver
+public sealed class AffectedProjectsResolver : IAffectedProjectsResolver
 {
     public AffectedProjectsResult Resolve(
         IReadOnlyList<LoadedProjectData> projects,

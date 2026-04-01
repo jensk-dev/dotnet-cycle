@@ -1,6 +1,6 @@
 ﻿namespace Cycle.Core;
 
-public class DependencyClosureResolver : IDependencyClosureResolver
+public sealed class DependencyClosureResolver : IDependencyClosureResolver
 {
     public ClosureResult Resolve(
         IReadOnlyDictionary<FilePath, ProjectInfo> affected,
