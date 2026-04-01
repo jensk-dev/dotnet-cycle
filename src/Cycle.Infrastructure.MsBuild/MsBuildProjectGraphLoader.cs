@@ -35,7 +35,11 @@ public sealed partial class MsBuildProjectGraphLoader(
 
         var projectLookup = projectData.ToDictionary(p => p.Info.FilePath, p => p.Info);
 
-        return new ProjectGraph(projectData, forwardMap, reverseMap, projectLookup);
+        return new ProjectGraph(
+            projectData,
+            forwardMap.ToDictionary(kvp => kvp.Key, kvp => (IReadOnlySet<FilePath>)kvp.Value),
+            reverseMap.ToDictionary(kvp => kvp.Key, kvp => (IReadOnlySet<FilePath>)kvp.Value),
+            projectLookup);
     }
 
     private static HashSet<string> CollectResolvedItemPaths(MsbProject project)

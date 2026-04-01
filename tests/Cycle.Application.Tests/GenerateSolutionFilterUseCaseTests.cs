@@ -81,8 +81,8 @@ public sealed class GenerateSolutionFilterUseCaseTests
     }
 
     private static ProjectGraph CreateEmptyGraph() =>
-        new([], new Dictionary<FilePath, HashSet<FilePath>>(),
-            new Dictionary<FilePath, HashSet<FilePath>>(),
+        new([], new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
             new Dictionary<FilePath, ProjectInfo>());
 
     private sealed class StubSolutionReader(
@@ -111,7 +111,7 @@ public sealed class GenerateSolutionFilterUseCaseTests
     {
         public AffectedProjectsResult Resolve(
             IReadOnlyList<LoadedProjectData> projects,
-            IReadOnlyDictionary<FilePath, HashSet<FilePath>> reverseMap,
+            IReadOnlyDictionary<FilePath, IReadOnlySet<FilePath>> reverseMap,
             IReadOnlyList<FilePath> changedFiles)
         {
             return result;
@@ -130,7 +130,7 @@ public sealed class GenerateSolutionFilterUseCaseTests
 
         public ClosureResult Resolve(
             IReadOnlyDictionary<FilePath, ProjectInfo> affected,
-            IReadOnlyDictionary<FilePath, HashSet<FilePath>> forwardMap,
+            IReadOnlyDictionary<FilePath, IReadOnlySet<FilePath>> forwardMap,
             IReadOnlyDictionary<FilePath, ProjectInfo> projectLookup)
         {
             WasCalled = true;

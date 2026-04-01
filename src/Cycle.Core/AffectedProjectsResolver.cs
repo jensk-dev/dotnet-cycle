@@ -4,7 +4,7 @@ public sealed class AffectedProjectsResolver : IAffectedProjectsResolver
 {
     public AffectedProjectsResult Resolve(
         IReadOnlyList<LoadedProjectData> projects,
-        IReadOnlyDictionary<FilePath, HashSet<FilePath>> reverseMap,
+        IReadOnlyDictionary<FilePath, IReadOnlySet<FilePath>> reverseMap,
         IReadOnlyList<FilePath> changedFiles)
     {
         ArgumentNullException.ThrowIfNull(projects);
@@ -36,7 +36,7 @@ public sealed class AffectedProjectsResolver : IAffectedProjectsResolver
     private static void FindAffectedProjects(
         FilePath changedFile,
         IReadOnlyList<LoadedProjectData> projects,
-        IReadOnlyDictionary<FilePath, HashSet<FilePath>> reverseMap,
+        IReadOnlyDictionary<FilePath, IReadOnlySet<FilePath>> reverseMap,
         Dictionary<FilePath, ProjectInfo> projectLookup,
         Dictionary<FilePath, ProjectInfo> affected)
     {

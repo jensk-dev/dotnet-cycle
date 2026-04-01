@@ -11,9 +11,9 @@ public sealed class DependencyClosureResolverTests
         var b = MakeProject("B");
 
         var affected = new Dictionary<FilePath, ProjectInfo> { [a.FilePath] = a };
-        var forwardMap = new Dictionary<FilePath, HashSet<FilePath>>
+        var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
         {
-            [a.FilePath] = [b.FilePath],
+            [a.FilePath] = new HashSet<FilePath> { b.FilePath },
         };
         var projectLookup = new Dictionary<FilePath, ProjectInfo>
         {
@@ -37,10 +37,10 @@ public sealed class DependencyClosureResolverTests
         var c = MakeProject("C");
 
         var affected = new Dictionary<FilePath, ProjectInfo> { [a.FilePath] = a };
-        var forwardMap = new Dictionary<FilePath, HashSet<FilePath>>
+        var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
         {
-            [a.FilePath] = [b.FilePath],
-            [b.FilePath] = [c.FilePath],
+            [a.FilePath] = new HashSet<FilePath> { b.FilePath },
+            [b.FilePath] = new HashSet<FilePath> { c.FilePath },
         };
         var projectLookup = new Dictionary<FilePath, ProjectInfo>
         {
@@ -68,10 +68,10 @@ public sealed class DependencyClosureResolverTests
             [a.FilePath] = a,
             [b.FilePath] = b,
         };
-        var forwardMap = new Dictionary<FilePath, HashSet<FilePath>>
+        var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
         {
-            [a.FilePath] = [shared.FilePath],
-            [b.FilePath] = [shared.FilePath],
+            [a.FilePath] = new HashSet<FilePath> { shared.FilePath },
+            [b.FilePath] = new HashSet<FilePath> { shared.FilePath },
         };
         var projectLookup = new Dictionary<FilePath, ProjectInfo>
         {
@@ -94,9 +94,9 @@ public sealed class DependencyClosureResolverTests
         var missingPath = FilePath.FromString(Path.Combine(Path.GetTempPath(), "Missing", "Missing.csproj"));
 
         var affected = new Dictionary<FilePath, ProjectInfo> { [a.FilePath] = a };
-        var forwardMap = new Dictionary<FilePath, HashSet<FilePath>>
+        var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
         {
-            [a.FilePath] = [missingPath],
+            [a.FilePath] = new HashSet<FilePath> { missingPath },
         };
         var projectLookup = new Dictionary<FilePath, ProjectInfo>
         {
@@ -115,7 +115,7 @@ public sealed class DependencyClosureResolverTests
     public void Resolve_EmptyInput_ReturnsEmpty()
     {
         var affected = new Dictionary<FilePath, ProjectInfo>();
-        var forwardMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
         var projectLookup = new Dictionary<FilePath, ProjectInfo>();
 
         var result = _sut.Resolve(affected, forwardMap, projectLookup);
@@ -130,7 +130,7 @@ public sealed class DependencyClosureResolverTests
         var a = MakeProject("A");
 
         var affected = new Dictionary<FilePath, ProjectInfo> { [a.FilePath] = a };
-        var forwardMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var forwardMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
         var projectLookup = new Dictionary<FilePath, ProjectInfo>
         {
             [a.FilePath] = a,

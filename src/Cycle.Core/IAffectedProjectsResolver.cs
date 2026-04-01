@@ -4,6 +4,6 @@ public interface IAffectedProjectsResolver
 {
     AffectedProjectsResult Resolve(
         IReadOnlyList<LoadedProjectData> projects,
-        IReadOnlyDictionary<FilePath, HashSet<FilePath>> reverseMap,
+        IReadOnlyDictionary<FilePath, IReadOnlySet<FilePath>> reverseMap,
         IReadOnlyList<FilePath> changedFiles);
 }

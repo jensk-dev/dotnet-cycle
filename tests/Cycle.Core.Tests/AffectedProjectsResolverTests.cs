@@ -10,7 +10,7 @@ public sealed class AffectedProjectsResolverTests
         var a = MakeProject("A");
         var changedFile = FilePath.FromString(Path.Combine(Path.GetTempPath(), "A", "File.cs"));
         var projects = new[] { MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath.FullPath, changedFile.FullPath)) };
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
         var result = _sut.Resolve(projects, reverseMap, [changedFile]);
 
@@ -24,7 +24,7 @@ public sealed class AffectedProjectsResolverTests
         var a = MakeProject("A");
         var changedFile = FilePath.FromString(Path.Combine(Path.GetTempPath(), "Other", "File.cs"));
         var projects = new[] { MakeLoadedProject(a) };
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
         var result = _sut.Resolve(projects, reverseMap, [changedFile]);
 
@@ -37,7 +37,7 @@ public sealed class AffectedProjectsResolverTests
     {
         var a = MakeProject("A");
         var projects = new[] { MakeFailedProject(a) };
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
         var result = _sut.Resolve(projects, reverseMap, Array.Empty<FilePath>());
 
@@ -63,10 +63,10 @@ public sealed class AffectedProjectsResolverTests
         };
 
         // B depends on C, A depends on B
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
         {
-            [c.FilePath] = [b.FilePath],
-            [b.FilePath] = [a.FilePath],
+            [c.FilePath] = new HashSet<FilePath> { b.FilePath },
+            [b.FilePath] = new HashSet<FilePath> { a.FilePath },
         };
 
         var result = _sut.Resolve(projects, reverseMap, [changedFile]);
@@ -86,7 +86,7 @@ public sealed class AffectedProjectsResolverTests
         {
             MakeLoadedProject(a, importPaths: MakePathSet(propsFile.FullPath)),
         };
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
         var result = _sut.Resolve(projects, reverseMap, [propsFile]);
 
@@ -107,7 +107,7 @@ public sealed class AffectedProjectsResolverTests
             MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath.FullPath, fileA.FullPath)),
             MakeLoadedProject(b, itemPaths: MakePathSet(b.FilePath.FullPath, fileB.FullPath)),
         };
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
         var result = _sut.Resolve(projects, reverseMap, [fileA, fileB]);
 
@@ -121,7 +121,7 @@ public sealed class AffectedProjectsResolverTests
     {
         var a = MakeProject("A");
         var projects = new[] { MakeLoadedProject(a) };
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
         var result = _sut.Resolve(projects, reverseMap, Array.Empty<FilePath>());
 
@@ -146,10 +146,10 @@ public sealed class AffectedProjectsResolverTests
         };
 
         // Shared depends on both A and B
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
         {
-            [a.FilePath] = [shared.FilePath],
-            [b.FilePath] = [shared.FilePath],
+            [a.FilePath] = new HashSet<FilePath> { shared.FilePath },
+            [b.FilePath] = new HashSet<FilePath> { shared.FilePath },
         };
 
         var result = _sut.Resolve(projects, reverseMap, [fileA, fileB]);
@@ -173,7 +173,7 @@ public sealed class AffectedProjectsResolverTests
             MakeFailedProject(b),
             MakeFailedProject(c),
         };
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
         var result = _sut.Resolve(projects, reverseMap, Array.Empty<FilePath>());
 
@@ -195,9 +195,9 @@ public sealed class AffectedProjectsResolverTests
             MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath.FullPath, changedFile.FullPath)),
         };
 
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>
         {
-            [a.FilePath] = [external.FilePath],
+            [a.FilePath] = new HashSet<FilePath> { external.FilePath },
         };
 
         var result = _sut.Resolve(projects, reverseMap, [changedFile]);
@@ -210,7 +210,7 @@ public sealed class AffectedProjectsResolverTests
     [Fact]
     public void Resolve_NullProjects_ThrowsArgumentNullException()
     {
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
         Should.Throw<ArgumentNullException>(() => _sut.Resolve(null!, reverseMap, Array.Empty<FilePath>()));
     }
 
@@ -223,7 +223,7 @@ public sealed class AffectedProjectsResolverTests
     [Fact]
     public void Resolve_NullChangedFiles_ThrowsArgumentNullException()
     {
-        var reverseMap = new Dictionary<FilePath, HashSet<FilePath>>();
+        var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
         Should.Throw<ArgumentNullException>(() => _sut.Resolve(Array.Empty<LoadedProjectData>(), reverseMap, null!));
     }
 

@@ -4,7 +4,7 @@ public sealed class DependencyClosureResolver : IDependencyClosureResolver
 {
     public ClosureResult Resolve(
         IReadOnlyDictionary<FilePath, ProjectInfo> affected,
-        IReadOnlyDictionary<FilePath, HashSet<FilePath>> forwardMap,
+        IReadOnlyDictionary<FilePath, IReadOnlySet<FilePath>> forwardMap,
         IReadOnlyDictionary<FilePath, ProjectInfo> projectLookup)
     {
         ArgumentNullException.ThrowIfNull(affected);
