@@ -8,9 +8,6 @@ charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
-[*.{cs,csx}]
-charset = utf-8-bom
-
 # Namespace preferences
 csharp_style_namespace_declarations = file_scoped:warning
 
