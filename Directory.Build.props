@@ -17,10 +17,10 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <MinVerTagPrefix>v</MinVerTagPrefix>
 
-    <BaseOutputPath>$(MSBuildThisFileDirectory)out\bin\$(MSBuildProjectName)\</BaseOutputPath>
-    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)out\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
-    <PublishDir>$(MSBuildThisFileDirectory)out\publish\$(MSBuildProjectName)\$(Configuration)\</PublishDir>
-    <PackageOutputPath>$(MSBuildThisFileDirectory)out\packages\$(Configuration)\</PackageOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)out/bin/$(MSBuildProjectName)/</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)out/obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <PublishDir>$(MSBuildThisFileDirectory)out/publish/$(MSBuildProjectName)/$(Configuration)/</PublishDir>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)out/packages/$(Configuration)/</PackageOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Label="Package metadata">
