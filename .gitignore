@@ -1,0 +1,28 @@
+# Build outputs
+out/
+StrykerOutput/
+
+# .NET
+bin/
+obj/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+
+# IDE
+.idea/
+.vs/
+*.DotSettings.user
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store

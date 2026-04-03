@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RollForward>LatestMajor</RollForward>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>cycle</ToolCommandName>
+    <PackageId>cycle</PackageId>
+    <Description>Generates a solution filter (.slnf) from affected .NET projects</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cycle.Application\Cycle.Application.csproj" />
+    <ProjectReference Include="..\Cycle.Core\Cycle.Core.csproj" />
+    <ProjectReference Include="..\Cycle.Infrastructure\Cycle.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cycle.Presentation.Cli.Tests" PublicKey="00240000048000009400000006020000002400005253413100040000010001007501bb83501a108991e532f2c90a7f8462f2e453677dca0224dfdc27e9665cf8258ad653f12118c050976a04f4f8bd81aef04eec5b9fdd0f7eb14d6bb73a6f0b499f3c121b0cf31059216c7683e1f7dc6e5e70a67ebcbe912289e929c0b1239df35ddfc8765491ea03aeebab63b8a9e998d0583acec127978692a8b352c1bcd2" />
+  </ItemGroup>
+
+</Project>

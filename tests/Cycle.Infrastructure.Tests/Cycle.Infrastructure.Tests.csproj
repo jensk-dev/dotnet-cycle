@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="FsCheck.Xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Cycle.Application\Cycle.Application.csproj" />
+    <ProjectReference Include="..\..\src\Cycle.Core\Cycle.Core.csproj" />
+    <ProjectReference Include="..\..\src\Cycle.Infrastructure\Cycle.Infrastructure.csproj" />
+    <ProjectReference Include="..\Cycle.Tests.Common\Cycle.Tests.Common.csproj" />
+  </ItemGroup>
+
+</Project>

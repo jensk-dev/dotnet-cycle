@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Cycle.Application/Cycle.Application.csproj" />
+    <Project Path="src/Cycle.Core/Cycle.Core.csproj" />
+    <Project Path="src/Cycle.Infrastructure/Cycle.Infrastructure.csproj" />
+    <Project Path="src/Cycle.Presentation.Cli/Cycle.Presentation.Cli.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Cycle.Application.Tests/Cycle.Application.Tests.csproj" />
+    <Project Path="tests/Cycle.Core.Tests/Cycle.Core.Tests.csproj" />
+    <Project Path="tests/Cycle.Infrastructure.Tests/Cycle.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Cycle.Presentation.Cli.Tests/Cycle.Presentation.Cli.Tests.csproj" />
+    <Project Path="tests/Cycle.Tests.Common/Cycle.Tests.Common.csproj" />
+  </Folder>
+</Solution>
