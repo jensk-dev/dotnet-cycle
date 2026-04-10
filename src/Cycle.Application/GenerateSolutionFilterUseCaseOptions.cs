@@ -8,4 +8,5 @@ public sealed class GenerateSolutionFilterUseCaseOptions
     public required IReadOnlyList<FilePath> FilesToTrace { get; init; }
     public required bool IncludeClosure { get; init; }
     public required FilePath OutputFile { get; init; }
+    public IReadOnlySet<FilePath>? ProjectScope { get; init; }
 }

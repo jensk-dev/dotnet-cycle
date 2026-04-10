@@ -106,6 +106,43 @@ public sealed class ProgramEndToEndTests : IClassFixture<MsBuildFixture>, IDispo
     }
 
     [Fact]
+    public async Task WithSlnfInput_ScopesToFilteredProjects()
+    {
+        var (csprojA, fileA) = SetUpProjectWithFile("ProjectA", "ClassA.cs", "class A {}");
+        var (csprojB, fileB) = SetUpProjectWithFile("ProjectB", "ClassB.cs", "class B {}");
+
+        CreateSlnx(csprojA, csprojB);
+
+        var slnfInputPath = Path.Combine(_testDir, "scope.slnf");
+        var relA = Path.GetRelativePath(_testDir, csprojA).Replace('\\', '/');
+        File.WriteAllText(slnfInputPath, $$"""
+            {
+              "solution": {
+                "path": "Test.slnx",
+                "projects": ["{{relA}}"]
+              }
+            }
+            """);
+
+        var changedFilePath = Path.Combine(_testDir, "changed.txt");
+        File.WriteAllText(changedFilePath, fileA + Environment.NewLine + fileB);
+        var outputPath = Path.Combine(_testDir, "output.slnf");
+
+        var exitCode = await Program.Main([slnfInputPath, outputPath, "--files", changedFilePath]);
+
+        exitCode.ShouldBe(0);
+        File.Exists(outputPath).ShouldBeTrue();
+
+        var json = await File.ReadAllTextAsync(outputPath, TestContext.Current.CancellationToken);
+        var doc = JsonDocument.Parse(json);
+        var projects = doc.RootElement.GetProperty("solution").GetProperty("projects");
+        projects.GetArrayLength().ShouldBe(1);
+        var firstProject = projects[0].GetString();
+        firstProject.ShouldNotBeNull();
+        firstProject.ShouldContain("ProjectA");
+    }
+
+    [Fact]
     public async Task WithInvalidSolutionPath_ReturnsOne()
     {
         var outputPath = Path.Combine(_testDir, "output.slnf");
@@ -152,6 +189,27 @@ public sealed class ProgramEndToEndTests : IClassFixture<MsBuildFixture>, IDispo
         var outputPath = Path.Combine(_testDir, "output.slnf");
 
         return (slnPath, changedFilePath, outputPath);
+    }
+
+    private (string csprojPath, string filePath) SetUpProjectWithFile(
+        string projectName, string fileName, string content)
+    {
+        var projectDir = Path.Combine(_testDir, projectName);
+        Directory.CreateDirectory(projectDir);
+        var csprojPath = Path.Combine(projectDir, $"{projectName}.csproj");
+        var filePath = Path.Combine(projectDir, fileName);
+        File.WriteAllText(filePath, content);
+        File.WriteAllText(csprojPath, $"""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+              </PropertyGroup>
+              <ItemGroup>
+                <Compile Include="{fileName}" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        return (csprojPath, filePath);
     }
 
     private string CreateSlnx(params string[] projectPaths)
