@@ -157,6 +157,49 @@ public sealed class GenerateSolutionFilterUseCaseTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WithProjectScope_FiltersToScopedProjects()
+    {
+        var changedFile = FilePath.FromString(
+            Path.Combine(TempBase, "src", "A", "File.cs"));
+        var loadedA = LoadedProjectData.Loaded(
+            ProjectA,
+            new HashSet<FilePath> { ProjectAPath, changedFile },
+            new HashSet<FilePath>());
+        var loadedB = LoadedProjectData.Loaded(
+            ProjectB,
+            new HashSet<FilePath> { ProjectBPath },
+            new HashSet<FilePath>());
+
+        var graph = new ProjectGraph(
+            [loadedA],
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, ProjectInfo>
+            {
+                [ProjectAPath] = ProjectA,
+            });
+
+        var solutionReader = new StubSolutionReader([ProjectA, ProjectB]);
+        var graphLoader = new StubProjectGraphLoader(graph);
+        var resultWriter = new StubResultWriter();
+        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, resultWriter, NullLogger<GenerateSolutionFilterUseCase>.Instance);
+
+        var result = await useCase.ExecuteAsync(
+            new GenerateSolutionFilterUseCaseOptions
+            {
+                SolutionPath = TestSolutionPath,
+                FilesToTrace = [changedFile],
+                IncludeClosure = false,
+                OutputFile = OutputFile,
+                ProjectScope = new HashSet<FilePath> { ProjectAPath },
+            }, CancellationToken.None);
+
+        result.TotalProjectCount.ShouldBe(1);
+        result.IncludedProjects.Count.ShouldBe(1);
+        result.IncludedProjects[0].Name.ShouldBe("A");
+    }
+
+    [Fact]
     public async Task ExecuteAsync_CallsFilterWriter()
     {
         var changedFile = FilePath.FromString(

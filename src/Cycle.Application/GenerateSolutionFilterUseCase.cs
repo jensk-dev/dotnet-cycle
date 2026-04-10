@@ -17,7 +17,10 @@ public sealed partial class GenerateSolutionFilterUseCase(
         var total = Stopwatch.StartNew();
         var sw = Stopwatch.StartNew();
 
-        var projects = await solutionReader.GetProjectsAsync(options.SolutionPath, ct);
+        var allProjects = await solutionReader.GetProjectsAsync(options.SolutionPath, ct);
+        var projects = options.ProjectScope is not null
+            ? allProjects.Where(p => options.ProjectScope.Contains(p.FilePath)).ToList()
+            : allProjects;
         var solutionReadTime = sw.Elapsed;
         LogSolutionRead(projects.Count);
 
