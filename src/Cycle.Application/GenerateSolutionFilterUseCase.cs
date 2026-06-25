@@ -8,6 +8,9 @@ public sealed partial class GenerateSolutionFilterUseCase(
     ISolutionReader solutionReader,
     IProjectGraphLoader graphLoader,
     IResultWriter resultWriter,
+    IProjectScopeFilter scopeFilter,
+    IAffectedProjectsResolver affectedProjectsResolver,
+    IDependencyClosureResolver dependencyClosureResolver,
     ILogger<GenerateSolutionFilterUseCase> logger)
 {
     public async Task<GenerateSolutionFilterResult> ExecuteAsync(
@@ -18,9 +21,7 @@ public sealed partial class GenerateSolutionFilterUseCase(
         var sw = Stopwatch.StartNew();
 
         var allProjects = await solutionReader.GetProjectsAsync(options.SolutionPath, ct);
-        var projects = options.ProjectScope is not null
-            ? allProjects.Where(p => options.ProjectScope.Contains(p.FilePath)).ToList()
-            : allProjects;
+        var projects = scopeFilter.Apply(allProjects, options.ProjectScope);
         var solutionReadTime = sw.Elapsed;
         LogSolutionRead(projects.Count);
 
@@ -30,7 +31,7 @@ public sealed partial class GenerateSolutionFilterUseCase(
         LogGraphLoaded(graphLoadTime.TotalMilliseconds);
 
         sw.Restart();
-        var affectedResult = AffectedProjectsResolver.Resolve(
+        var affectedResult = affectedProjectsResolver.Resolve(
             graph.Projects, graph.ReverseDependencyMap, options.FilesToTrace);
         var affectedResolveTime = sw.Elapsed;
         LogAffectedResolved(affectedResult.AffectedProjects.Count, affectedResult.FailedToLoadProjects.Count, affectedResolveTime.TotalMilliseconds);
@@ -65,7 +66,7 @@ public sealed partial class GenerateSolutionFilterUseCase(
         }
 
         var sw = Stopwatch.StartNew();
-        var closure = DependencyClosureResolver.Resolve(
+        var closure = dependencyClosureResolver.Resolve(
             affectedResult.AffectedProjects,
             graph.ForwardDependencyMap,
             graph.ProjectLookup);

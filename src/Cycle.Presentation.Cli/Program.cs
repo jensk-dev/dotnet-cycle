@@ -119,8 +119,9 @@ public static partial class Program
 
             var reader = new MsBuildSolutionReader(loggerFactory.CreateLogger<MsBuildSolutionReader>());
             var graphLoader = new MsBuildProjectGraphLoader(loggerFactory);
+            var slnfInputReader = new SlnfInputReader(loggerFactory.CreateLogger<SlnfInputReader>());
 
-            var (solutionPath, projectScope) = await ResolveSolutionInputAsync(solutionFile, ct);
+            var (solutionPath, projectScope) = await ResolveSolutionInputAsync(slnfInputReader, solutionFile, ct);
             LogProcessing(logger, solutionPath.FilePath.FileName, filesToTrace.Count);
 
             var streamFactory = new FileOutputStreamFactory();
@@ -130,6 +131,9 @@ public static partial class Program
 
             var useCase = new GenerateSolutionFilterUseCase(
                 reader, graphLoader, resultWriter,
+                new ProjectScopeFilter(),
+                new AffectedProjectsResolver(),
+                new DependencyClosureResolver(),
                 loggerFactory.CreateLogger<GenerateSolutionFilterUseCase>());
 
             var outputFilePath = FilePath.FromString(outputFile.FullName);
@@ -254,13 +258,13 @@ public static partial class Program
     }
 
     private static async Task<(SolutionPath Path, IReadOnlySet<FilePath>? ProjectScope)>
-        ResolveSolutionInputAsync(FileInfo solutionFile, CancellationToken ct)
+        ResolveSolutionInputAsync(SlnfInputReader slnfInputReader, FileInfo solutionFile, CancellationToken ct)
     {
         if (solutionFile.Extension.Equals(".slnf", StringComparison.OrdinalIgnoreCase))
         {
             var slnfPath = FilePath.FromString(solutionFile.FullName);
-            var (parentSolution, scope) = await SlnfInputReader.ReadAsync(slnfPath, ct);
-            return (parentSolution, scope);
+            var slnfInput = await slnfInputReader.ReadAsync(slnfPath, ct);
+            return (slnfInput.ParentSolution, slnfInput.ProjectScope);
         }
 
         return (SolutionPath.FromString(solutionFile.FullName), null);

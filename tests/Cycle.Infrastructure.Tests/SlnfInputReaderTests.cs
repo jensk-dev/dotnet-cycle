@@ -1,11 +1,13 @@
 using System.Text.Json;
 using Cycle.Core;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Cycle.Infrastructure.Tests;
 
 public sealed class SlnfInputReaderTests : IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private readonly SlnfInputReader _reader = new(NullLogger<SlnfInputReader>.Instance);
     private readonly string _testDir;
 
     public SlnfInputReaderTests()
@@ -29,7 +31,7 @@ public sealed class SlnfInputReaderTests : IDisposable
         File.WriteAllText(slnPath, "");
         var slnfPath = WriteSlnf("MySolution.sln", []);
 
-        var (parentSolution, _) = await SlnfInputReader.ReadAsync(
+        var (parentSolution, _) = await _reader.ReadAsync(
             FilePath.FromString(slnfPath), CancellationToken.None);
 
         parentSolution.FilePath.FullPath.ShouldBe(Path.GetFullPath(slnPath));
@@ -49,7 +51,7 @@ public sealed class SlnfInputReaderTests : IDisposable
 
         var slnfPath = WriteSlnf("solutions/MySolution.sln", ["src/A/A.csproj"]);
 
-        var (_, scope) = await SlnfInputReader.ReadAsync(
+        var (_, scope) = await _reader.ReadAsync(
             FilePath.FromString(slnfPath), CancellationToken.None);
 
         scope.Count.ShouldBe(1);
@@ -63,7 +65,7 @@ public sealed class SlnfInputReaderTests : IDisposable
         File.WriteAllText(slnPath, "");
         var slnfPath = WriteSlnf("MySolution.sln", []);
 
-        var (_, scope) = await SlnfInputReader.ReadAsync(
+        var (_, scope) = await _reader.ReadAsync(
             FilePath.FromString(slnfPath), CancellationToken.None);
 
         scope.ShouldBeEmpty();
@@ -84,7 +86,7 @@ public sealed class SlnfInputReaderTests : IDisposable
 
         var slnfPath = WriteSlnf("MySolution.sln", ["src/A/A.csproj", "src/B/B.csproj"]);
 
-        var (_, scope) = await SlnfInputReader.ReadAsync(
+        var (_, scope) = await _reader.ReadAsync(
             FilePath.FromString(slnfPath), CancellationToken.None);
 
         scope.Count.ShouldBe(2);
@@ -99,7 +101,7 @@ public sealed class SlnfInputReaderTests : IDisposable
         File.WriteAllText(slnfPath, "not json");
 
         await Should.ThrowAsync<JsonException>(
-            () => SlnfInputReader.ReadAsync(
+            () => _reader.ReadAsync(
                 FilePath.FromString(slnfPath), CancellationToken.None));
     }
 
@@ -109,8 +111,19 @@ public sealed class SlnfInputReaderTests : IDisposable
         var slnfPath = Path.Combine(_testDir, "missing.slnf");
         File.WriteAllText(slnfPath, """{"other": {}}""");
 
-        await Should.ThrowAsync<KeyNotFoundException>(
-            () => SlnfInputReader.ReadAsync(
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => _reader.ReadAsync(
+                FilePath.FromString(slnfPath), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ReadAsync_WithMissingProjectsProperty_Throws()
+    {
+        var slnfPath = Path.Combine(_testDir, "no-projects.slnf");
+        File.WriteAllText(slnfPath, """{"solution": {"path": "MySolution.sln"}}""");
+
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => _reader.ReadAsync(
                 FilePath.FromString(slnfPath), CancellationToken.None));
     }
 
