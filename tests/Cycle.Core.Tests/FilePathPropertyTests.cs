@@ -20,7 +20,7 @@ public sealed class FilePathPropertyTests
         return Prop.ForAll(ValidFilePathStrings(), s =>
         {
             var fp = FilePath.FromString(s);
-            return Path.IsPathRooted(fp.FullPath) && fp.FullPath.Contains(Path.GetFileName(s));
+            return Path.IsPathRooted(fp.FullPath) && fp.FullPath.Contains(Path.GetFileName(s), StringComparison.Ordinal);
         });
     }
 
