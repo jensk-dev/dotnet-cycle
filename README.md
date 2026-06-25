@@ -32,7 +32,7 @@ dotnet cycle <solution-path> <output-file> [options]
 
 | Argument | Description |
 |---|---|
-| `solution-path` | Path to the solution file (`.sln` or `.slnx`) |
+| `solution-path` | Path to the solution file (`.sln`, `.slnx`, or `.slnf`) |
 | `output-file` | Path to write the output file |
 
 ### Options
@@ -73,6 +73,15 @@ Output absolute project paths as plain text:
 
 ```bash
 git diff --name-only origin/main...HEAD | dotnet cycle MySolution.slnx affected.txt --format txt
+```
+
+Scope analysis to a project subset with a solution filter. When `solution-path`
+is a `.slnf`, cycle resolves the parent solution from the filter and restricts
+the analysis to the projects the filter lists, ignoring everything outside that
+subset:
+
+```bash
+git diff --name-only origin/main...HEAD | dotnet cycle MySubset.slnf affected.slnf
 ```
 
 ## How it works
@@ -164,7 +173,7 @@ When the format is `slnf`, the tool converts project paths to relative form and 
 
 ## Scope and limitations
 
-Cycle targets .NET projects that use the SDK project format and are managed through solution files (`.sln` or `.slnx`). It is being evaluated and tested in CI/CD against a multitargeted repository that ships both `net8.0` and `net472` assemblies. The design prioritizes being simple, small, and testable over covering every possible build scenario.
+Cycle targets .NET projects that use the SDK project format and are managed through solution files (`.sln`, `.slnx`, or `.slnf`). It is being evaluated and tested in CI/CD against a multitargeted repository that ships both `net8.0` and `net472` assemblies. The design prioritizes being simple, small, and testable over covering every possible build scenario.
 
 Cycle is not a fit for projects that do not use MSBuild as their build system. It traces the MSBuild project graph: `ProjectReference`, imports, and item references. Coupling that exists only at runtime or by convention is invisible to it.
 
