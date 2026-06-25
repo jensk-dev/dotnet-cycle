@@ -396,7 +396,7 @@ public sealed class MsBuildProjectGraphLoaderTests : IClassFixture<MsBuildFixtur
         var projects = await reader.GetProjectsAsync(slnPath, CancellationToken.None);
         var loader = CreateLoader();
         var graph = loader.Load(projects, changed, CancellationToken.None);
-        var affected = AffectedProjectsResolver.Resolve(graph.Projects, graph.ReverseDependencyMap, changed);
+        var affected = new AffectedProjectsResolver().Resolve(graph.Projects, graph.ReverseDependencyMap, changed);
         return (graph, affected);
     }
 }

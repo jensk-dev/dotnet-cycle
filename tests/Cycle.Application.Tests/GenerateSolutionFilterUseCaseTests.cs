@@ -22,6 +22,19 @@ public sealed class GenerateSolutionFilterUseCaseTests
     private static readonly ProjectInfo ProjectA = new("A", ProjectAPath);
     private static readonly ProjectInfo ProjectB = new("B", ProjectBPath);
 
+    private static GenerateSolutionFilterUseCase CreateUseCase(
+        ISolutionReader solutionReader,
+        IProjectGraphLoader graphLoader,
+        IResultWriter resultWriter) =>
+        new(
+            solutionReader,
+            graphLoader,
+            resultWriter,
+            new ProjectScopeFilter(),
+            new AffectedProjectsResolver(),
+            new DependencyClosureResolver(),
+            NullLogger<GenerateSolutionFilterUseCase>.Instance);
+
     [Fact]
     public async Task ExecuteAsync_WithoutClosure_ReturnsAffectedOnly()
     {
@@ -53,7 +66,7 @@ public sealed class GenerateSolutionFilterUseCaseTests
 
         var solutionReader = new StubSolutionReader([ProjectA, ProjectB]);
         var graphLoader = new StubProjectGraphLoader(graph);
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, new StubResultWriter(), NullLogger<GenerateSolutionFilterUseCase>.Instance);
+        var useCase = CreateUseCase(solutionReader, graphLoader, new StubResultWriter());
 
         var result = await useCase.ExecuteAsync(
             new GenerateSolutionFilterUseCaseOptions
@@ -99,7 +112,7 @@ public sealed class GenerateSolutionFilterUseCaseTests
 
         var solutionReader = new StubSolutionReader([ProjectA, ProjectB]);
         var graphLoader = new StubProjectGraphLoader(graph);
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, new StubResultWriter(), NullLogger<GenerateSolutionFilterUseCase>.Instance);
+        var useCase = CreateUseCase(solutionReader, graphLoader, new StubResultWriter());
 
         var result = await useCase.ExecuteAsync(
             new GenerateSolutionFilterUseCaseOptions
@@ -140,7 +153,7 @@ public sealed class GenerateSolutionFilterUseCaseTests
 
         var solutionReader = new StubSolutionReader([ProjectA]);
         var graphLoader = new StubProjectGraphLoader(graph);
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, new StubResultWriter(), NullLogger<GenerateSolutionFilterUseCase>.Instance);
+        var useCase = CreateUseCase(solutionReader, graphLoader, new StubResultWriter());
 
         var result = await useCase.ExecuteAsync(
             new GenerateSolutionFilterUseCaseOptions
@@ -154,6 +167,49 @@ public sealed class GenerateSolutionFilterUseCaseTests
         result.UnresolvedReferences.Count.ShouldBe(1);
         result.UnresolvedReferences[0].ReferencedBy.ShouldBe(ProjectAPath);
         result.UnresolvedReferences[0].ReferencePath.ShouldBe(missingPath);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithProjectScope_FiltersToScopedProjects()
+    {
+        var changedFile = FilePath.FromString(
+            Path.Combine(TempBase, "src", "A", "File.cs"));
+        var loadedA = LoadedProjectData.Loaded(
+            ProjectA,
+            new HashSet<FilePath> { ProjectAPath, changedFile },
+            new HashSet<FilePath>());
+        var loadedB = LoadedProjectData.Loaded(
+            ProjectB,
+            new HashSet<FilePath> { ProjectBPath },
+            new HashSet<FilePath>());
+
+        var graph = new ProjectGraph(
+            [loadedA],
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, IReadOnlySet<FilePath>>(),
+            new Dictionary<FilePath, ProjectInfo>
+            {
+                [ProjectAPath] = ProjectA,
+            });
+
+        var solutionReader = new StubSolutionReader([ProjectA, ProjectB]);
+        var graphLoader = new StubProjectGraphLoader(graph);
+        var resultWriter = new StubResultWriter();
+        var useCase = CreateUseCase(solutionReader, graphLoader, resultWriter);
+
+        var result = await useCase.ExecuteAsync(
+            new GenerateSolutionFilterUseCaseOptions
+            {
+                SolutionPath = TestSolutionPath,
+                FilesToTrace = [changedFile],
+                IncludeClosure = false,
+                OutputFile = OutputFile,
+                ProjectScope = new HashSet<FilePath> { ProjectAPath },
+            }, CancellationToken.None);
+
+        result.TotalProjectCount.ShouldBe(1);
+        result.IncludedProjects.Count.ShouldBe(1);
+        result.IncludedProjects[0].Name.ShouldBe("A");
     }
 
     [Fact]
@@ -177,7 +233,7 @@ public sealed class GenerateSolutionFilterUseCaseTests
         var solutionReader = new StubSolutionReader([ProjectA]);
         var graphLoader = new StubProjectGraphLoader(graph);
         var resultWriter = new StubResultWriter();
-        var useCase = new GenerateSolutionFilterUseCase(solutionReader, graphLoader, resultWriter, NullLogger<GenerateSolutionFilterUseCase>.Instance);
+        var useCase = CreateUseCase(solutionReader, graphLoader, resultWriter);
 
         await useCase.ExecuteAsync(
             new GenerateSolutionFilterUseCaseOptions

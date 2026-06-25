@@ -2,6 +2,8 @@ namespace Cycle.Core.Tests;
 
 public sealed class AffectedProjectsResolverTests
 {
+    private static readonly AffectedProjectsResolver Resolver = new();
+
     [Fact]
     public void Resolve_ChangedFileInProject_ReturnsProject()
     {
@@ -10,7 +12,7 @@ public sealed class AffectedProjectsResolverTests
         var projects = new[] { MakeLoadedProject(a, itemPaths: MakePathSet(a.FilePath, changedFile)) };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, [changedFile]);
+        var result = Resolver.Resolve(projects, reverseMap, [changedFile]);
 
         result.AffectedProjects.Count.ShouldBe(1);
         result.AffectedProjects.ShouldContain(p => p.FilePath == a.FilePath);
@@ -24,7 +26,7 @@ public sealed class AffectedProjectsResolverTests
         var projects = new[] { MakeLoadedProject(a) };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, [changedFile]);
+        var result = Resolver.Resolve(projects, reverseMap, [changedFile]);
 
         result.AffectedProjects.ShouldBeEmpty();
         result.FailedToLoadProjects.ShouldBeEmpty();
@@ -37,7 +39,7 @@ public sealed class AffectedProjectsResolverTests
         var projects = new[] { MakeFailedProject(a) };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, Array.Empty<FilePath>());
+        var result = Resolver.Resolve(projects, reverseMap, Array.Empty<FilePath>());
 
         result.AffectedProjects.Count.ShouldBe(1);
         result.AffectedProjects.ShouldContain(p => p.FilePath == a.FilePath);
@@ -67,7 +69,7 @@ public sealed class AffectedProjectsResolverTests
             [b.FilePath] = new HashSet<FilePath> { a.FilePath },
         };
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, [changedFile]);
+        var result = Resolver.Resolve(projects, reverseMap, [changedFile]);
 
         result.AffectedProjects.Count.ShouldBe(3);
         result.AffectedProjects.ShouldContain(p => p.FilePath == a.FilePath);
@@ -86,7 +88,7 @@ public sealed class AffectedProjectsResolverTests
         };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, [propsFile]);
+        var result = Resolver.Resolve(projects, reverseMap, [propsFile]);
 
         result.AffectedProjects.Count.ShouldBe(1);
         result.AffectedProjects.ShouldContain(p => p.FilePath == a.FilePath);
@@ -107,7 +109,7 @@ public sealed class AffectedProjectsResolverTests
         };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, [fileA, fileB]);
+        var result = Resolver.Resolve(projects, reverseMap, [fileA, fileB]);
 
         result.AffectedProjects.Count.ShouldBe(2);
         result.AffectedProjects.ShouldContain(p => p.FilePath == a.FilePath);
@@ -121,7 +123,7 @@ public sealed class AffectedProjectsResolverTests
         var projects = new[] { MakeLoadedProject(a) };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, Array.Empty<FilePath>());
+        var result = Resolver.Resolve(projects, reverseMap, Array.Empty<FilePath>());
 
         result.AffectedProjects.ShouldBeEmpty();
         result.FailedToLoadProjects.ShouldBeEmpty();
@@ -150,7 +152,7 @@ public sealed class AffectedProjectsResolverTests
             [b.FilePath] = new HashSet<FilePath> { shared.FilePath },
         };
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, [fileA, fileB]);
+        var result = Resolver.Resolve(projects, reverseMap, [fileA, fileB]);
 
         result.AffectedProjects.Count.ShouldBe(3);
         result.AffectedProjects.ShouldContain(p => p.FilePath == a.FilePath);
@@ -173,7 +175,7 @@ public sealed class AffectedProjectsResolverTests
         };
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, Array.Empty<FilePath>());
+        var result = Resolver.Resolve(projects, reverseMap, Array.Empty<FilePath>());
 
         result.FailedToLoadProjects.Count.ShouldBe(2);
         result.FailedToLoadProjects.ShouldContain(p => p.FilePath == b.FilePath);
@@ -198,7 +200,7 @@ public sealed class AffectedProjectsResolverTests
             [a.FilePath] = new HashSet<FilePath> { external.FilePath },
         };
 
-        var result = AffectedProjectsResolver.Resolve(projects, reverseMap, [changedFile]);
+        var result = Resolver.Resolve(projects, reverseMap, [changedFile]);
 
         result.AffectedProjects.Count.ShouldBe(1);
         result.AffectedProjects.ShouldContain(p => p.FilePath == a.FilePath);
@@ -209,20 +211,20 @@ public sealed class AffectedProjectsResolverTests
     public void Resolve_NullProjects_ThrowsArgumentNullException()
     {
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
-        Should.Throw<ArgumentNullException>(() => AffectedProjectsResolver.Resolve(null!, reverseMap, Array.Empty<FilePath>()));
+        Should.Throw<ArgumentNullException>(() => Resolver.Resolve(null!, reverseMap, Array.Empty<FilePath>()));
     }
 
     [Fact]
     public void Resolve_NullReverseMap_ThrowsArgumentNullException()
     {
-        Should.Throw<ArgumentNullException>(() => AffectedProjectsResolver.Resolve(Array.Empty<LoadedProjectData>(), null!, Array.Empty<FilePath>()));
+        Should.Throw<ArgumentNullException>(() => Resolver.Resolve(Array.Empty<LoadedProjectData>(), null!, Array.Empty<FilePath>()));
     }
 
     [Fact]
     public void Resolve_NullChangedFiles_ThrowsArgumentNullException()
     {
         var reverseMap = new Dictionary<FilePath, IReadOnlySet<FilePath>>();
-        Should.Throw<ArgumentNullException>(() => AffectedProjectsResolver.Resolve(Array.Empty<LoadedProjectData>(), reverseMap, null!));
+        Should.Throw<ArgumentNullException>(() => Resolver.Resolve(Array.Empty<LoadedProjectData>(), reverseMap, null!));
     }
 
     private static ProjectInfo MakeProject(string name)
