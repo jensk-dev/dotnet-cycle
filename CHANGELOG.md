@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-17
+
+### Changed
+
+- Bump `NSubstitute` from 5.3.0 to 6.0.0 (#41).
+- Bump `Meziantou.Analyzer`, `Microsoft.Extensions.Logging.Abstractions`,
+  `Microsoft.NET.Test.Sdk`, `Microsoft.SourceLink.GitHub`, and
+  `System.CommandLine` (#40).
+- Bump GitHub Actions: `actions/setup-dotnet`, `actions/cache`,
+  `actions/attest-build-provenance`, and the .NET SDK patch version.
+
 ## [0.2.0] - 2026-06-25
 
 ### Added
@@ -37,7 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release of `cycle`, an affected-project resolver for .NET CI.
 
-[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/jensk-dev/dotnet-cycle/releases/tag/v0.1.0
