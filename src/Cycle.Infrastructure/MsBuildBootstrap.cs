@@ -4,35 +4,39 @@ namespace Cycle.Infrastructure;
 
 public static class MsBuildBootstrap
 {
-    private static int _initialized;
+    private static readonly object InitLock = new();
+    private static bool _initialized;
 
     public static void Initialize()
     {
-        if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0)
+        // Callers must block until registration has completed, not just until it has
+        // started. A caller that returns early can trigger JIT compilation of code
+        // referencing Microsoft.Build types before the locator's assembly resolver
+        // is registered, which fails with FileNotFoundException.
+        lock (InitLock)
         {
-            try
+            if (_initialized)
             {
-                var runtimeMajor = Environment.Version.Major;
-
-                var match = MSBuildLocator.QueryVisualStudioInstances()
-                    .Where(i => i.Version.Major == runtimeMajor)
-                    .OrderByDescending(i => i.Version)
-                    .FirstOrDefault();
-
-                if (match is not null)
-                {
-                    MSBuildLocator.RegisterInstance(match);
-                }
-                else
-                {
-                    MSBuildLocator.RegisterDefaults();
-                }
+                return;
             }
-            catch
+
+            var runtimeMajor = Environment.Version.Major;
+
+            var match = MSBuildLocator.QueryVisualStudioInstances()
+                .Where(i => i.Version.Major == runtimeMajor)
+                .OrderByDescending(i => i.Version)
+                .FirstOrDefault();
+
+            if (match is not null)
             {
-                Interlocked.Exchange(ref _initialized, 0);
-                throw;
+                MSBuildLocator.RegisterInstance(match);
             }
+            else
+            {
+                MSBuildLocator.RegisterDefaults();
+            }
+
+            _initialized = true;
         }
     }
 }
