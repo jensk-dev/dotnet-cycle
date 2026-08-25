@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-25
+
+### Fixed
+
+- Block the MSBuild bootstrap until locator registration completes. Callers that
+  returned once registration had merely started could trigger JIT compilation of
+  code referencing `Microsoft.Build` types before the locator's assembly
+  resolver was registered, which failed with `FileNotFoundException` (#56).
+
+### Changed
+
+- Pin the .NET SDK to 10.0.400 (#50).
+- Bump `System.CommandLine`, `Microsoft.Extensions.Logging.Abstractions`,
+  `Microsoft.NET.Test.Sdk`, `NSubstitute`, `Meziantou.Analyzer`, and
+  `Microsoft.SourceLink.GitHub` (#54).
+- Align the `Microsoft.Extensions` packages at 10.0.11 and bump `FsCheck` and
+  `FsCheck.Xunit.v3` to 3.3.4.
+- Bump the local tools `dotnet-coverage`, `dotnet-reportgenerator-globaltool`,
+  and `dotnet-stryker`.
+- Bump GitHub Actions: `actions/checkout` and `actions/attest`.
+
 ## [0.2.1] - 2026-07-17
 
 ### Changed
@@ -48,7 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release of `cycle`, an affected-project resolver for .NET CI.
 
-[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.1.0...v0.1.1
