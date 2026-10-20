@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-10-20
+
+### Changed
+
+- Pin the .NET SDK to 10.0.402 (#73).
+- Bump `System.CommandLine`, `Microsoft.Extensions.Logging.Abstractions`,
+  `Microsoft.NET.Test.Sdk`, `Meziantou.Analyzer`, and
+  `Microsoft.SourceLink.GitHub` (#75).
+- Bump `xunit.v3` from 3.2.2 to 4.0.2, and `FsCheck` and `FsCheck.Xunit.v3`
+  to 3.5.0 (#72).
+- Move the local tool manifest to `.config/dotnet-tools.json` so dependabot
+  keeps the local tools up to date (#74).
+- Bump the local tools `dotnet-coverage` (#75) and `dotnet-stryker` (#76).
+- Bump GitHub Actions: `actions/upload-artifact` and
+  `actions/download-artifact` (#68, #69).
+
+## [0.2.3] - 2026-09-28
+
+### Changed
+
+- Pin the .NET SDK to 10.0.401 (#63).
+- Bump `System.CommandLine`, `Microsoft.Extensions.Logging.Abstractions`,
+  `Microsoft.NET.Test.Sdk`, `Meziantou.Analyzer`, and
+  `Microsoft.SourceLink.GitHub` (#64, #66).
+
 ## [0.2.2] - 2026-08-25
 
 ### Fixed
@@ -69,7 +94,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release of `cycle`, an affected-project resolver for .NET CI.
 
-[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.3...v0.2.4
+[0.2.3]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.1.1...v0.2.0
