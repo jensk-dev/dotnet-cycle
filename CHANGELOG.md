@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-11-11
+
+This is the last release that supports .NET 8.
+
+### Changed
+
+- Pin the .NET SDK to 10.0.404 (#79, #84).
+- Bump `System.CommandLine` to 2.0.15, the `Microsoft.Extensions` packages to
+  10.0.15, `Microsoft.SourceLink.GitHub` to 10.0.404, `Meziantou.Analyzer`,
+  `Microsoft.NET.Test.Sdk`, `xunit.v3`, `FsCheck`, and `FsCheck.Xunit.v3`
+  (#78, #84).
+- Bump the local tools `dotnet-stryker` to 5.1.0 and
+  `dotnet-reportgenerator-globaltool` to 5.6.0 (#84).
+- Bump GitHub Actions: `actions/setup-dotnet` (#81).
+
 ## [0.2.4] - 2026-10-20
 
 ### Changed
@@ -94,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release of `cycle`, an affected-project resolver for .NET CI.
 
-[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.1...v0.2.2
