@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Target .NET 10 and support running on .NET 10 and .NET 11. CI end-to-end
+  tests now cover .NET 10 and .NET 11.
+
+### Removed
+
+- Drop support for .NET 8. Cycle now requires the .NET 10 SDK or later.
+
 ## [0.2.5] - 2026-11-11
 
 This is the last release that supports .NET 8.

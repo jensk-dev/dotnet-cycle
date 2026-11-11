@@ -30,7 +30,6 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: 8.0.x
           global-json-file: global.json
 
       - name: Cache NuGet packages
@@ -95,7 +94,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
-        dotnet-version: ['8.0.x', '10.0.x']
+        dotnet-version: ['10.0.x', '11.0.x']
     runs-on: ${{ matrix.os }}
 
     steps:

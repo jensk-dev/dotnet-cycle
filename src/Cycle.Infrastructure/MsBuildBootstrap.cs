@@ -4,7 +4,7 @@ namespace Cycle.Infrastructure;
 
 public static class MsBuildBootstrap
 {
-    private static readonly object InitLock = new();
+    private static readonly Lock InitLock = new();
     private static bool _initialized;
 
     public static void Initialize()
