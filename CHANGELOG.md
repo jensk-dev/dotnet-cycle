@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-11
+
 ### Changed
 
 - Target .NET 10 and support running on .NET 10 and .NET 11. CI end-to-end
-  tests now cover .NET 10 and .NET 11.
+  tests now cover .NET 10 and .NET 11 (#83).
 
 ### Removed
 
-- Drop support for .NET 8. Cycle now requires the .NET 10 SDK or later.
+- Drop support for .NET 8. Cycle now requires the .NET 10 SDK or later (#83).
 
 ## [0.2.5] - 2026-11-11
 
@@ -30,6 +32,7 @@ This is the last release that supports .NET 8.
 - Bump the local tools `dotnet-stryker` to 5.1.0 and
   `dotnet-reportgenerator-globaltool` to 5.6.0 (#84).
 - Bump GitHub Actions: `actions/setup-dotnet` (#81).
+- Publish to NuGet with trusted publishing instead of an API key (#85).
 
 ## [0.2.4] - 2026-10-20
 
@@ -118,7 +121,8 @@ This is the last release that supports .NET 8.
 
 - Initial release of `cycle`, an affected-project resolver for .NET CI.
 
-[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.5...v0.3.0
 [0.2.5]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/jensk-dev/dotnet-cycle/compare/v0.2.2...v0.2.3
