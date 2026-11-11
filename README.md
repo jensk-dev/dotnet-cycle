@@ -13,7 +13,7 @@ dotnet test affected.slnf
 
 ## Installation
 
-Cycle requires the .NET SDK, version 8.0 or later.
+Cycle requires the .NET SDK, version 10.0 or later. It runs on .NET 10 and .NET 11.
 
 Install cycle as a local tool with a pinned version.
 

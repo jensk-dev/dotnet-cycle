@@ -1,7 +1,7 @@
 {
   "version": 2,
   "dependencies": {
-    "net8.0": {
+    "net10.0": {
       "Meziantou.Analyzer": {
         "type": "Direct",
         "requested": "[3.0.324, )",
@@ -14,8 +14,7 @@
         "resolved": "10.0.15",
         "contentHash": "s5xzXGWqqlmmThMnQ1rnmL7QLwbluB2JqX9NaK8C9HPuHzN7kfmiddTRbwts5rQssATkh2B18RrofjeUD8g14A==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.15",
-          "System.Diagnostics.DiagnosticSource": "10.0.15"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.15"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -52,11 +51,6 @@
         "type": "Transitive",
         "resolved": "10.0.404",
         "contentHash": "jQuH8U7EpZEO7XrV3Ql7PvgpyQGsytm74HNawvOdgKGQc97x8bLDlxGx4pT2kCU+3lLu/f42jEoKixGMkm8Ynw=="
-      },
-      "System.Diagnostics.DiagnosticSource": {
-        "type": "Transitive",
-        "resolved": "10.0.15",
-        "contentHash": "FiaK64a1hYTWYZTxr98yieZxO6aBujVr2SGuYQURv0AKzz0bsIENYTm8On/s70Llp+JXzgtW8jg6kf59zDZwuw=="
       },
       "System.IO.Hashing": {
         "type": "Transitive",
