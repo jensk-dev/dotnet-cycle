@@ -10,7 +10,7 @@
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.11.48" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.11.2" />
     <PackageVersion Include="Microsoft.VisualStudio.SolutionPersistence" Version="1.0.52" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.15" />
+    <PackageVersion Include="System.CommandLine" Version="3.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.15" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.15" />
